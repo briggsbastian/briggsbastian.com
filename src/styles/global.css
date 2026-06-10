@@ -1,6 +1,7 @@
 /* ── The Forge theme ─────────────────────────────────────────────
-   Warm near-black, ember accent, editorial serif display type.
-   The thought garden swaps the ember for moss via [data-accent].
+   Warm near-black, editorial serif display type, one accent color
+   per section via [data-accent]: ember (home), iris (projects),
+   moss (garden), frost (resume).
    ──────────────────────────────────────────────────────────────── */
 
 :root {
@@ -30,6 +31,18 @@
   --accent: #a8c686;
   --accent-bright: #c2dba4;
   --accent-glow: rgba(168, 198, 134, 0.1);
+}
+
+[data-accent='frost'] {
+  --accent: #7fb4e0;
+  --accent-bright: #a8cdef;
+  --accent-glow: rgba(127, 180, 224, 0.1);
+}
+
+[data-accent='iris'] {
+  --accent: #ab8df5;
+  --accent-bright: #c5afff;
+  --accent-glow: rgba(171, 141, 245, 0.1);
 }
 
 * {

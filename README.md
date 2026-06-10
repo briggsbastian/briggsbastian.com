@@ -1,8 +1,9 @@
 # briggsbastian.com
 
 Personal portfolio and thought garden. Astro static site, "Forge" theme —
-warm near-black, ember accent, editorial serif. The garden swaps the ember
-for moss.
+warm near-black, editorial serif, and one accent color per section:
+ember (home), iris (projects), moss (garden), frost (resume). Accents are
+defined as `[data-accent]` token blocks in `src/styles/global.css`.
 
 ## Stack
 
