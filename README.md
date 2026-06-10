@@ -39,8 +39,8 @@ grep -rn "TODO(briggs)" src/
 
 ## Deploy
 
-CI deploys `main` to GitHub Pages (enable Pages → Source: GitHub Actions,
-then point the `briggsbastian.com` custom domain at it). Alternatively build
+CI deploys `main` to GitHub Pages — **[DEPLOY.md](DEPLOY.md)** is the full
+runbook (one-time setup, DNS records, troubleshooting). Alternatively build
 the Docker image and run it anywhere:
 
 ```sh
