@@ -1,0 +1,243 @@
+---
+import Base from '../layouts/Base.astro';
+
+// TODO(briggs): exact title at Libra and the bullet points are written from
+// "senior security position, I make most of the decisions, I do it all" —
+// tighten them to what you actually do.
+const experience = [
+  {
+    company: 'Libra Solutions Group',
+    title: 'Senior Security Engineer',
+    dates: 'Sept 2025 — Present',
+    bullets: [
+      'Own the security program end to end: architecture, tooling selection, policy, and incident response all route through one desk — mine.',
+      'Set and defend the technical direction for detection, hardening, and infrastructure security, making the final call on what gets deployed and why.',
+      'Operate across the full stack — from SIEM engineering and EDR strategy to network architecture and the automation that keeps it all auditable.',
+      'Translate security posture into decisions leadership can act on, replacing vendor checklists with engineering judgment.',
+    ],
+  },
+  {
+    company: 'Kraft Kennedy',
+    title: 'Security Engineer',
+    dates: 'Aug 2022 — Sept 2025',
+    bullets: [
+      'Subject matter expert for ConnectWise SIEM — created and curated detection alerting in Kibana across client environments.',
+      'Supported SIEM deployment and configuration for customers end to end.',
+      'Managed security tool integrations spanning EDR, DNS filtering, and email security platforms.',
+    ],
+  },
+  {
+    company: 'Sprout Mortgage',
+    title: 'IT Support',
+    dates: 'Feb 2022 — July 2022',
+    bullets: [
+      'Account management and software support for Microsoft Office 365 and the Encompass mortgage platform.',
+    ],
+  },
+  {
+    company: 'JNC Management',
+    title: 'Sales Representative',
+    dates: '2019 — 2021',
+    bullets: [
+      'Covered the Simi Valley and Topanga regions; managed Northridge branch operations.',
+    ],
+  },
+  {
+    company: "McDonald's",
+    title: 'Crew Member',
+    dates: '2017 — 2019',
+    bullets: ['Where the uptime requirements were the strictest.'],
+  },
+];
+
+const education = [
+  { school: 'UCSD Cybersecurity Bootcamp', detail: 'Completed 2021' },
+  { school: 'Simi Valley High School', detail: 'Class of 2019' },
+];
+
+const skills = [
+  { category: 'SIEM / IDS', items: ['ConnectWise SIEM', 'Wazuh', 'BlackPoint', 'Microsoft Sentinel'] },
+  { category: 'EDR', items: ['SentinelOne', 'Microsoft Defender for Endpoint'] },
+  { category: 'DNS Security', items: ['Cisco Umbrella / OpenDNS', 'Atakama'] },
+  { category: 'Email Security', items: ['Mimecast', 'Barracuda', 'Tessian'] },
+  { category: 'Security Awareness', items: ['KnowBe4', 'BreachSecureNow'] },
+  { category: 'Network Infrastructure', items: ['Cisco Catalyst / Meraki', 'Ubiquiti UniFi', 'SonicWall', 'Fortinet', 'pfSense'] },
+  { category: 'Operating Systems', items: ['Linux (NixOS at home and anywhere they let me)', 'Windows', 'macOS'] },
+];
+---
+
+<Base
+  title="Resume — Briggs Bastian"
+  description="Resume of Briggs Bastian — senior security engineer in Seattle. SIEM engineering, EDR strategy, and infrastructure security."
+>
+  <section class="container intro">
+    <p class="kicker">Resume</p>
+    <h1>The paper trail.</h1>
+    <p class="lede">
+      Senior security engineer in Seattle. The short version: I went from
+      curating SIEM alerts to owning the whole security program — and the
+      <a href="/projects/">projects</a> are where the same instincts run
+      without a change-control board.
+    </p>
+  </section>
+
+  <section class="container block">
+    <p class="kicker">Experience</p>
+    <ol class="jobs">
+      {
+        experience.map((job) => (
+          <li class="job">
+            <div class="job-head">
+              <h2>{job.company}</h2>
+              <span class="dates">{job.dates}</span>
+            </div>
+            <p class="title">{job.title}</p>
+            <ul>
+              {job.bullets.map((bullet) => (
+                <li>{bullet}</li>
+              ))}
+            </ul>
+          </li>
+        ))
+      }
+    </ol>
+  </section>
+
+  <section class="container block">
+    <p class="kicker">Education</p>
+    <ul class="edu">
+      {
+        education.map((entry) => (
+          <li>
+            <h2>{entry.school}</h2>
+            <span class="dates">{entry.detail}</span>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <section class="container block">
+    <p class="kicker">Tooling</p>
+    <div class="skills">
+      {
+        skills.map((group) => (
+          <div class="skill-group">
+            <h3>{group.category}</h3>
+            <ul>
+              {group.items.map((item) => (
+                <li class="tag">{item}</li>
+              ))}
+            </ul>
+          </div>
+        ))
+      }
+    </div>
+  </section>
+</Base>
+
+<style>
+  .intro {
+    padding-block: clamp(3rem, 8vw, 6rem);
+  }
+
+  .intro h1 {
+    font-size: clamp(2.75rem, 7vw, 5rem);
+    margin-block: 1rem 1.5rem;
+  }
+
+  .lede {
+    max-width: 38rem;
+    color: var(--muted);
+    font-size: 1.1rem;
+  }
+
+  .block {
+    padding-block: clamp(2.5rem, 6vw, 4rem);
+    border-top: 1px solid var(--line);
+  }
+
+  .jobs,
+  .edu {
+    list-style: none;
+    padding: 0;
+    margin-top: 2rem;
+    display: grid;
+    gap: 2.75rem;
+  }
+
+  .job {
+    max-width: 50rem;
+  }
+
+  .job-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem 1.5rem;
+  }
+
+  .job-head h2,
+  .edu h2 {
+    font-size: 1.75rem;
+  }
+
+  .dates {
+    font-family: var(--mono);
+    font-size: 0.8125rem;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+
+  .title {
+    font-family: var(--mono);
+    font-size: 0.8125rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 0.35rem;
+  }
+
+  .job ul {
+    margin-top: 1rem;
+    padding-left: 1.25rem;
+    display: grid;
+    gap: 0.5rem;
+    color: var(--muted);
+    font-size: 0.975rem;
+  }
+
+  .job ul li::marker {
+    color: var(--accent);
+  }
+
+  .edu li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem 1.5rem;
+    max-width: 50rem;
+  }
+
+  .skills {
+    margin-top: 2rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(18rem, 100%), 1fr));
+    gap: 2rem 3rem;
+  }
+
+  .skill-group h3 {
+    font-size: 1.25rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .skill-group ul {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+</style>
