@@ -1,6 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
+import Orbits from '../components/Orbits.astro';
 import ProjectCard from '../components/ProjectCard.astro';
 import GardenNote from '../components/GardenNote.astro';
 
@@ -47,24 +48,44 @@ const capabilities = [
   description="Security-minded systems engineer in Seattle. Building resilient infrastructure, a NixOS-native RMM, and a souls-like PvP game."
 >
   <section class="hero container">
-    <p class="kicker">Briggs Bastian — Seattle, WA</p>
-    <h1>Systems that hold<br />under <em>pressure</em>.</h1>
-    <p class="lede">
-      Security-minded systems engineer with a deep Linux background. I design
-      infrastructure that survives bad days, automate the boring parts out of
-      existence, and — after hours — build a souls-like where the netcode has
-      to be as honest as the combat.
-    </p>
-    <div class="hero-actions">
-      <a class="btn" href="/projects/">See the work</a>
-      <a class="btn ghost" href="/garden/">Wander the garden</a>
+    <div class="hero-grid">
+      <div>
+        <p class="kicker">Briggs Bastian — Seattle, WA</p>
+        <h1>Systems that hold<br />under <em>pressure</em>.</h1>
+        <p class="lede">
+          Security-minded systems engineer with a deep Linux background. I design
+          infrastructure that survives bad days, automate the boring parts out of
+          existence, and — after hours — build a souls-like where the netcode has
+          to be as honest as the combat.
+        </p>
+        <div class="hero-actions">
+          <a class="btn" href="/projects/">See the work</a>
+          <a class="btn ghost" href="/garden/">Wander the garden</a>
+        </div>
+        {/* TODO(briggs): fluff numbers — replace with figures you can defend. */}
+        <dl class="stats">
+          <div>
+            <dd>04+</dd>
+            <dt>years in security ops</dt>
+          </div>
+          <div>
+            <dd>05</dd>
+            <dt>projects in flight</dt>
+          </div>
+          <div>
+            <dd>99.9<span>%</span></dd>
+            <dt>availability target</dt>
+          </div>
+        </dl>
+      </div>
+      <Orbits />
     </div>
   </section>
 
   <section class="section container">
-    <div class="section-head">
+    <div class="section-head" data-num="01">
       <div>
-        <p class="kicker">01 / Now building</p>
+        <p class="kicker">Now building</p>
         <h2>Selected work</h2>
       </div>
       <a class="more" href="/projects/">All projects</a>
@@ -75,9 +96,9 @@ const capabilities = [
   </section>
 
   <section class="section container">
-    <div class="section-head">
+    <div class="section-head" data-num="02">
       <div>
-        <p class="kicker">02 / Operations</p>
+        <p class="kicker">Operations</p>
         <h2>How I run things</h2>
       </div>
       <a class="more" href="/ops/">The receipts</a>
@@ -96,9 +117,9 @@ const capabilities = [
   </section>
 
   <section class="section container">
-    <div class="section-head">
+    <div class="section-head" data-num="03">
       <div>
-        <p class="kicker">03 / Thought garden</p>
+        <p class="kicker">Thought garden</p>
         <h2>Recently tended</h2>
       </div>
       <a class="more" href="/garden/">Enter the garden</a>
@@ -111,11 +132,23 @@ const capabilities = [
 
 <style>
   .hero {
-    padding-block: clamp(4rem, 10vw, 8rem);
+    padding-block: clamp(3.5rem, 9vw, 7rem);
+  }
+
+  .hero-grid {
+    display: grid;
+    align-items: center;
+    gap: 3rem;
+  }
+
+  @media (min-width: 64rem) {
+    .hero-grid {
+      grid-template-columns: 1.25fr 0.75fr;
+    }
   }
 
   .hero h1 {
-    font-size: clamp(3rem, 9vw, 6.5rem);
+    font-size: clamp(3.25rem, 9vw, 7rem);
     margin-block: 1.25rem 1.75rem;
   }
 
@@ -168,6 +201,39 @@ const capabilities = [
     color: var(--accent-bright);
     border-color: var(--accent);
     box-shadow: 0 0 24px var(--accent-glow);
+  }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, auto);
+    justify-content: start;
+    gap: clamp(1.5rem, 4vw, 3.5rem);
+    margin-top: clamp(2.5rem, 5vw, 3.5rem);
+  }
+
+  .stats div {
+    border-left: 1px solid var(--line-bright);
+    padding-left: 1.1rem;
+  }
+
+  .stats dd {
+    font-family: var(--serif);
+    font-size: clamp(1.9rem, 4vw, 2.6rem);
+    line-height: 1;
+    color: var(--accent);
+  }
+
+  .stats dd span {
+    font-size: 0.6em;
+  }
+
+  .stats dt {
+    margin-top: 0.4rem;
+    font-family: var(--mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--faint);
   }
 
   .grid {

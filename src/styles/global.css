@@ -93,11 +93,13 @@ body {
   font-size: 1.0625rem;
   line-height: 1.65;
   -webkit-font-smoothing: antialiased;
-  /* night-sky ground: section-accent wash over a navy → deep fade */
+  /* night-sky ground: accent wash + blueprint dot grid + navy fade */
   background-image:
     linear-gradient(180deg, var(--accent-glow), transparent 32rem),
+    radial-gradient(rgba(154, 176, 220, 0.09) 1px, transparent 1.3px),
     linear-gradient(180deg, #101a30 0%, #0a0e18 46rem);
-  background-repeat: no-repeat;
+  background-size: auto, 26px 26px, auto;
+  background-repeat: no-repeat, repeat, no-repeat;
 }
 
 ::selection {
@@ -176,6 +178,40 @@ code {
   border-top: 1px solid var(--line);
 }
 
+/* Crosshair marks where section rules meet the container edges —
+   the blueprint detail that frames every page. */
+.section,
+.block {
+  position: relative;
+}
+
+.section::before,
+.block::before,
+.section::after,
+.block::after {
+  position: absolute;
+  top: 0;
+  font-family: var(--mono);
+  font-size: 0.9rem;
+  line-height: 1;
+  color: var(--faint);
+  pointer-events: none;
+}
+
+.section::before,
+.block::before {
+  content: '+';
+  left: 0;
+  transform: translate(-50%, -50%);
+}
+
+.section::after,
+.block::after {
+  content: '+';
+  right: 0;
+  transform: translate(50%, -50%);
+}
+
 .section-head {
   display: flex;
   align-items: baseline;
@@ -185,8 +221,27 @@ code {
 }
 
 .section-head h2 {
-  font-size: clamp(2rem, 5vw, 3rem);
+  font-size: clamp(2.25rem, 6vw, 3.6rem);
   margin-top: 0.75rem;
+}
+
+/* Giant outlined section numerals, fed by data-num="01" etc. */
+[data-num] {
+  position: relative;
+}
+
+[data-num]::after {
+  content: attr(data-num);
+  position: absolute;
+  right: 0;
+  top: -1.25rem;
+  font-family: var(--serif);
+  font-size: clamp(4.5rem, 11vw, 8.5rem);
+  line-height: 1;
+  color: transparent;
+  -webkit-text-stroke: 1px var(--line-bright);
+  z-index: -1;
+  pointer-events: none;
 }
 
 .section-head .more {
