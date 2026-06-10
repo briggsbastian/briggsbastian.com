@@ -3,13 +3,17 @@ import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import GardenNote from '../../components/GardenNote.astro';
 
-const stageOrder = { evergreen: 0, budding: 1, seedling: 2 } as const;
-
 const notes = (await getCollection('garden')).sort(
-  (a, b) =>
-    stageOrder[a.data.stage] - stageOrder[b.data.stage] ||
-    b.data.tended.valueOf() - a.data.tended.valueOf()
+  (a, b) => b.data.tended.valueOf() - a.data.tended.valueOf()
 );
+
+const stages = [
+  { id: 'seedling', glyph: '○', count: notes.filter((n) => n.data.stage === 'seedling').length },
+  { id: 'budding', glyph: '◐', count: notes.filter((n) => n.data.stage === 'budding').length },
+  { id: 'evergreen', glyph: '●', count: notes.filter((n) => n.data.stage === 'evergreen').length },
+];
+
+const topics = [...new Set(notes.flatMap((n) => n.data.topics))].sort();
 ---
 
 <Base
@@ -22,15 +26,35 @@ const notes = (await getCollection('garden')).sort(
     <h1>Notes that grow.</h1>
     <p class="lede">
       This isn't a blog. Nothing here is finished, and that's the point —
-      ideas get planted as <strong>○ seedlings</strong>, tended into
-      <strong>◐ budding</strong> notes, and a few mature into
-      <strong>● evergreens</strong>. Visit twice and you'll read two
-      different gardens.
+      ideas get planted, tended in place, and a few mature into something
+      worth trusting. Visit twice and you'll read two different gardens.
     </p>
   </section>
 
   <section class="container">
-    {notes.map((note) => <GardenNote note={note} />)}
+    <div class="filters" id="garden-filters">
+      <div class="filter-row" data-filter="stage" role="group" aria-label="Filter by stage">
+        <button class="chip-btn active" data-value="">everything</button>
+        {stages.map((s) => (
+          <button class="chip-btn" data-value={s.id}>
+            {s.glyph} {s.id} <span class="count">{s.count}</span>
+          </button>
+        ))}
+      </div>
+      <div class="filter-row" data-filter="topic" role="group" aria-label="Filter by topic">
+        <button class="chip-btn active" data-value="">all topics</button>
+        {topics.map((t) => (
+          <button class="chip-btn" data-value={t}>{t}</button>
+        ))}
+      </div>
+    </div>
+
+    <div class="grid" id="garden-grid">
+      {notes.map((note) => <GardenNote note={note} />)}
+    </div>
+    <p class="empty" id="garden-empty" hidden>
+      Nothing growing at that intersection yet. <button class="chip-btn" id="garden-clear">Clear filters</button>
+    </p>
   </section>
 </Base>
 
@@ -50,9 +74,117 @@ const notes = (await getCollection('garden')).sort(
     font-size: 1.1rem;
   }
 
-  .lede strong {
+  .filters {
+    display: grid;
+    gap: 0.75rem;
+    margin-bottom: 2.25rem;
+    padding-bottom: 1.75rem;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+  }
+
+  .chip-btn {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    background: var(--bg-raised);
+    border: 1px solid var(--line-bright);
+    border-radius: 999px;
+    padding: 0.35rem 0.85rem;
+    cursor: pointer;
+    transition: color 120ms ease, border-color 120ms ease, background 120ms ease;
+  }
+
+  .chip-btn:hover {
     color: var(--accent-bright);
-    font-weight: 500;
-    white-space: nowrap;
+    border-color: var(--accent);
+  }
+
+  .chip-btn.active {
+    color: var(--bg);
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .chip-btn .count {
+    opacity: 0.65;
+    font-size: 0.9em;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(21rem, 100%), 1fr));
+    gap: 1.25rem;
+  }
+
+  .empty {
+    margin-top: 2rem;
+    color: var(--muted);
+    font-style: italic;
   }
 </style>
+
+<script>
+  const grid = document.getElementById('garden-grid');
+  const filters = document.getElementById('garden-filters');
+  const empty = document.getElementById('garden-empty');
+  const clear = document.getElementById('garden-clear');
+
+  if (grid && filters && empty) {
+    const cards = [...grid.querySelectorAll<HTMLElement>('[data-stage]')];
+    const state = { stage: '', topic: '' };
+
+    function apply() {
+      let shown = 0;
+      for (const card of cards) {
+        const stageOk = !state.stage || card.dataset.stage === state.stage;
+        const topicOk =
+          !state.topic || (card.dataset.topics ?? '').split(' ').includes(state.topic);
+        const show = stageOk && topicOk;
+        card.style.display = show ? '' : 'none';
+        if (show) shown++;
+      }
+      empty!.hidden = shown > 0;
+
+      for (const row of filters!.querySelectorAll<HTMLElement>('.filter-row')) {
+        const kind = row.dataset.filter as 'stage' | 'topic';
+        for (const btn of row.querySelectorAll<HTMLButtonElement>('.chip-btn')) {
+          btn.classList.toggle('active', (btn.dataset.value ?? '') === state[kind]);
+        }
+      }
+
+      const params = new URLSearchParams();
+      if (state.stage) params.set('stage', state.stage);
+      if (state.topic) params.set('topic', state.topic);
+      const qs = params.toString();
+      history.replaceState(null, '', qs ? `?${qs}` : location.pathname);
+    }
+
+    filters.addEventListener('click', (e) => {
+      const btn = (e.target as Element).closest<HTMLButtonElement>('.chip-btn');
+      const row = btn?.closest<HTMLElement>('.filter-row');
+      if (!btn || !row) return;
+      const kind = row.dataset.filter as 'stage' | 'topic';
+      const value = btn.dataset.value ?? '';
+      state[kind] = state[kind] === value ? '' : value;
+      apply();
+    });
+
+    clear?.addEventListener('click', () => {
+      state.stage = '';
+      state.topic = '';
+      apply();
+    });
+
+    const params = new URLSearchParams(location.search);
+    state.stage = params.get('stage') ?? '';
+    state.topic = params.get('topic') ?? '';
+    if (state.stage || state.topic) apply();
+  }
+</script>

@@ -65,16 +65,16 @@ const capabilities = [
         {/* TODO(briggs): fluff numbers — replace with figures you can defend. */}
         <dl class="stats">
           <div>
-            <dd>04+</dd>
             <dt>years in security ops</dt>
+            <dd data-count>04+</dd>
           </div>
           <div>
-            <dd>05</dd>
             <dt>projects in flight</dt>
+            <dd data-count>05</dd>
           </div>
           <div>
-            <dd>99.9<span>%</span></dd>
             <dt>availability target</dt>
+            <dd data-count>99.9<span>%</span></dd>
           </div>
         </dl>
       </div>
@@ -124,7 +124,7 @@ const capabilities = [
       </div>
       <a class="more" href="/garden/">Enter the garden</a>
     </div>
-    <div data-accent="moss">
+    <div class="grid" data-accent="moss">
       {notes.map((note) => <GardenNote note={note} />)}
     </div>
   </section>
@@ -212,6 +212,9 @@ const capabilities = [
   }
 
   .stats div {
+    display: flex;
+    /* dt precedes dd semantically; the number renders on top */
+    flex-direction: column-reverse;
     border-left: 1px solid var(--line-bright);
     padding-left: 1.1rem;
   }
@@ -221,6 +224,8 @@ const capabilities = [
     font-size: clamp(1.9rem, 4vw, 2.6rem);
     line-height: 1;
     color: var(--accent);
+    margin-bottom: 0.4rem;
+    font-variant-numeric: tabular-nums;
   }
 
   .stats dd span {
@@ -228,7 +233,6 @@ const capabilities = [
   }
 
   .stats dt {
-    margin-top: 0.4rem;
     font-family: var(--mono);
     font-size: 0.6875rem;
     letter-spacing: 0.1em;
@@ -264,3 +268,32 @@ const capabilities = [
     font-size: 0.95rem;
   }
 </style>
+
+<script>
+  // Hero stats count up on load (skipped under reduced motion).
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    for (const dd of document.querySelectorAll<HTMLElement>('[data-count]')) {
+      const textNode = dd.firstChild;
+      if (!textNode || textNode.nodeType !== Node.TEXT_NODE) continue;
+      const raw = textNode.textContent ?? '';
+      const match = raw.match(/[\d.]+/);
+      if (!match || match.index === undefined) continue;
+      const target = parseFloat(match[0]);
+      const decimals = (match[0].split('.')[1] ?? '').length;
+      const pad = match[0].split('.')[0]!.length;
+      const prefix = raw.slice(0, match.index);
+      const suffix = raw.slice(match.index + match[0].length);
+      const start = performance.now();
+      const duration = 1100;
+      const tick = (now: number) => {
+        const p = Math.min((now - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - p, 3);
+        const value = (target * eased).toFixed(decimals);
+        const [int = '', dec] = value.split('.');
+        textNode.textContent = prefix + int.padStart(pad, '0') + (dec ? `.${dec}` : '') + suffix;
+        if (p < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    }
+  }
+</script>

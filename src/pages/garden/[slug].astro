@@ -1,6 +1,7 @@
 ---
 import { getCollection, render } from 'astro:content';
 import Base from '../../layouts/Base.astro';
+import GardenNote from '../../components/GardenNote.astro';
 
 export async function getStaticPaths() {
   const notes = await getCollection('garden');
@@ -18,6 +19,17 @@ const { Content } = await render(note);
 
 const fmt = (d: Date) =>
   d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+// related: shared-topic notes first, then most recently tended
+const others = (await getCollection('garden')).filter((n) => n.id !== note.id);
+const related = others
+  .sort(
+    (a, b) =>
+      Number(b.data.topics.some((t) => topics.includes(t))) -
+        Number(a.data.topics.some((t) => topics.includes(t))) ||
+      b.data.tended.valueOf() - a.data.tended.valueOf()
+  )
+  .slice(0, 2);
 ---
 
 <Base title={`${title} — Thought Garden`} description={description} accent="moss">
@@ -28,7 +40,9 @@ const fmt = (d: Date) =>
       <div class="meta">
         <span>planted {fmt(planted)}</span>
         <span>last tended {fmt(tended)}</span>
-        {topics.map((topic) => <span class="tag">{topic}</span>)}
+        {topics.map((topic) => (
+          <a class="tag" href={`/garden/?topic=${encodeURIComponent(topic)}`}>{topic}</a>
+        ))}
       </div>
     </header>
     <div class="prose">
@@ -39,6 +53,15 @@ const fmt = (d: Date) =>
       {stage === 'budding' && 'A budding note — taking form, still being tended.'}
       {stage === 'evergreen' && 'An evergreen — as settled as anything in a garden gets.'}
     </p>
+
+    {related.length > 0 && (
+      <aside class="related">
+        <p class="kicker">Elsewhere in the garden</p>
+        <div class="related-grid">
+          {related.map((n) => <GardenNote note={n} />)}
+        </div>
+      </aside>
+    )}
   </article>
 </Base>
 
@@ -71,6 +94,16 @@ const fmt = (d: Date) =>
     color: var(--faint);
   }
 
+  .meta a.tag {
+    text-decoration: none;
+    transition: border-color 120ms ease, color 120ms ease;
+  }
+
+  .meta a.tag:hover {
+    border-color: var(--accent);
+    color: var(--accent-bright);
+  }
+
   .caveat {
     max-width: var(--prose);
     margin-top: 3.5rem;
@@ -79,5 +112,19 @@ const fmt = (d: Date) =>
     font-style: italic;
     color: var(--faint);
     font-size: 0.95rem;
+  }
+
+  .related {
+    margin-top: 3.5rem;
+    padding-top: 2.5rem;
+    border-top: 1px solid var(--line);
+  }
+
+  .related-grid {
+    margin-top: 1.5rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(21rem, 100%), 1fr));
+    gap: 1.25rem;
+    max-width: 46rem;
   }
 </style>

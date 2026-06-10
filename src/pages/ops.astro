@@ -125,7 +125,13 @@ const runbooks = [
     <div class="table-wrap">
       <table>
         <thead>
-          <tr><th>Service</th><th>Objective</th><th>Window</th><th>Current</th><th>Error budget</th></tr>
+          <tr>
+            <th scope="col">Service</th>
+            <th scope="col">Objective</th>
+            <th scope="col">Window</th>
+            <th scope="col">Current</th>
+            <th scope="col">Error budget</th>
+          </tr>
         </thead>
         <tbody>
           {slos.map((row) => (

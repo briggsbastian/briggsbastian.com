@@ -16,7 +16,7 @@ const statusLabel: Record<typeof status, string> = {
 };
 ---
 
-<a class="card" href={`/projects/${project.id}/`}>
+<a class="card" href={`/projects/${project.id}/`} data-spot>
   <div class="meta">
     <span class="chip">{statusLabel[status]}</span>
     <span class="year">{year}</span>
@@ -35,7 +35,9 @@ const statusLabel: Record<typeof status, string> = {
     flex-direction: column;
     gap: 0.9rem;
     padding: 2rem;
-    background: linear-gradient(165deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.012));
+    background:
+      radial-gradient(240px circle at var(--mx, 50%) var(--my, 130%), var(--accent-glow), transparent 70%),
+      linear-gradient(165deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.012));
     border: 1px solid var(--line);
     border-radius: 14px;
     backdrop-filter: blur(8px);

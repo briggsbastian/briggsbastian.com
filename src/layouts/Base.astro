@@ -65,7 +65,10 @@ const isActive = (prefix: string) => path.startsWith(prefix);
           </p>
         </div>
         <ul class="footer-links">
-          <li><a href="mailto:briggsbastian@pm.me">briggsbastian@pm.me</a></li>
+          <li>
+            <a href="mailto:briggsbastian@pm.me">briggsbastian@pm.me</a>
+            <button class="copy" data-copy="briggsbastian@pm.me" aria-label="Copy email address">copy</button>
+          </li>
           <li><a href="https://github.com/briggsbastian" target="_blank" rel="noopener">github.com/briggsbastian</a></li>
           <li><a href="https://linkedin.com/in/briggs-bastian" target="_blank" rel="noopener">linkedin.com/in/briggs-bastian</a></li>
         </ul>
@@ -75,6 +78,34 @@ const isActive = (prefix: string) => path.startsWith(prefix);
         <span>Built with Astro · Deployed from a Nix flake</span>
       </div>
     </footer>
+
+    <script>
+      // Spotlight: cards with [data-spot] get a cursor-following glow.
+      document.addEventListener('pointermove', (e) => {
+        const card = (e.target as Element | null)?.closest?.('[data-spot]') as HTMLElement | null;
+        if (!card) return;
+        const rect = card.getBoundingClientRect();
+        card.style.setProperty('--mx', `${e.clientX - rect.left}px`);
+        card.style.setProperty('--my', `${e.clientY - rect.top}px`);
+      });
+
+      // Click-to-copy for the footer email.
+      document.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          try {
+            await navigator.clipboard.writeText(btn.dataset.copy!);
+            btn.textContent = 'copied ✓';
+            btn.classList.add('done');
+            setTimeout(() => {
+              btn.textContent = 'copy';
+              btn.classList.remove('done');
+            }, 1600);
+          } catch {
+            btn.textContent = 'select it manually';
+          }
+        });
+      });
+    </script>
 
     <script>
       // Scroll reveal: html.js gates the hidden state (see global.css),
@@ -379,6 +410,30 @@ const isActive = (prefix: string) => path.startsWith(prefix);
 
   .footer-links a:hover {
     color: var(--accent-bright);
+  }
+
+  .copy {
+    margin-left: 0.6rem;
+    font-family: var(--mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.05em;
+    color: var(--faint);
+    background: transparent;
+    border: 1px solid var(--line-bright);
+    border-radius: 999px;
+    padding: 0.15rem 0.6rem;
+    cursor: pointer;
+    transition: color 120ms ease, border-color 120ms ease;
+  }
+
+  .copy:hover {
+    color: var(--accent-bright);
+    border-color: var(--accent);
+  }
+
+  .copy.done {
+    color: var(--moss);
+    border-color: var(--moss);
   }
 
   .colophon {

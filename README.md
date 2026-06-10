@@ -8,7 +8,8 @@ and one accent color per section: ember (home), iris (projects), moss
 
 ## Stack
 
-- **[Astro 5](https://astro.build)** — fully static output, zero client JS
+- **[Astro 5](https://astro.build)** — fully static output, no framework
+  runtime; a few small vanilla scripts for the topology map and polish
 - **Content collections** — projects and garden notes are markdown with
   schema-validated frontmatter (`src/content.config.ts`)
 - **Hand-rolled CSS** — design tokens in `src/styles/global.css`, no framework

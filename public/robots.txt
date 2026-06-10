@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://briggsbastian.com/sitemap-index.xml

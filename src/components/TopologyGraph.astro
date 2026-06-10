@@ -119,7 +119,12 @@ const edges = nodes
 ---
 
 <figure class="topo">
-  <svg id="topo-svg" viewBox={`0 0 ${W} ${VIEW_H.collapsed}`} aria-label="Homelab network topology — tiered map from internet to devices">
+  <svg
+    id="topo-svg"
+    viewBox={`0 0 ${W} ${VIEW_H.collapsed}`}
+    aria-label="Homelab network topology — tiered map from internet to devices"
+    aria-describedby="topo-info"
+  >
     <g>
       {edges.map((e) => (
         <path
@@ -142,6 +147,10 @@ const edges = nodes
           data-label={n.label}
           data-blurb={n.blurb}
           data-expandable={n.collapsed ? '1' : undefined}
+          tabindex="0"
+          role={n.collapsed ? 'button' : undefined}
+          aria-expanded={n.collapsed ? 'false' : undefined}
+          aria-label={n.label}
           style={`--t: ${n.tier}`}
         >
           <circle class="hit" r={n.r + 13} />
@@ -406,25 +415,39 @@ const edges = nodes
       info!.append(name, ` — ${m.el.dataset.blurb!}`);
     }
 
+    function toggle(m: Meta) {
+      const kids = (childrenOf.get(m.id) ?? []).length;
+      if (collapsed.has(m.id)) {
+        collapsed.delete(m.id);
+        if (m.badge) m.badge.textContent = '−';
+        m.el.setAttribute('aria-expanded', 'true');
+      } else {
+        collapsed.add(m.id);
+        if (m.badge) m.badge.textContent = `+${kids}`;
+        m.el.setAttribute('aria-expanded', 'false');
+      }
+      relayout();
+      focus(m);
+    }
+
     for (const m of metas) {
       m.el.addEventListener('pointerenter', () => focus(m));
+      m.el.addEventListener('focus', () => focus(m));
       if (m.expandable) {
-        m.el.addEventListener('click', () => {
-          const kids = (childrenOf.get(m.id) ?? []).length;
-          if (collapsed.has(m.id)) {
-            collapsed.delete(m.id);
-            if (m.badge) m.badge.textContent = '−';
-          } else {
-            collapsed.add(m.id);
-            if (m.badge) m.badge.textContent = `+${kids}`;
+        m.el.addEventListener('click', () => toggle(m));
+        m.el.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            toggle(m);
           }
-          relayout();
-          focus(m);
         });
       }
     }
 
     svg.addEventListener('pointerleave', () => svg.classList.remove('focused'));
+    svg.addEventListener('focusout', (e) => {
+      if (!svg.contains(e.relatedTarget as Node)) svg.classList.remove('focused');
+    });
 
     relayout();
   }
