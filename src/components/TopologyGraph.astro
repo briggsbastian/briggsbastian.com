@@ -71,12 +71,12 @@
     pointer-events: none;
   }
 
-  #topo-svg .c-ember { --nc: #ff8a3d; }
-  #topo-svg .c-iris  { --nc: #ab8df5; }
-  #topo-svg .c-moss  { --nc: #a8c686; }
-  #topo-svg .c-frost { --nc: #7fb4e0; }
-  #topo-svg .c-brass { --nc: #d9b257; }
-  #topo-svg .c-none  { --nc: #8a8171; }
+  #topo-svg .c-ember { --nc: var(--ember); }
+  #topo-svg .c-iris  { --nc: var(--iris); }
+  #topo-svg .c-moss  { --nc: var(--moss); }
+  #topo-svg .c-frost { --nc: var(--frost); }
+  #topo-svg .c-brass { --nc: var(--brass); }
+  #topo-svg .c-none  { --nc: var(--faint); }
 
   /* Focus mode: dim everything that isn't the hovered node's neighborhood */
   #topo-svg.focused .node:not(.hl) {
