@@ -3,10 +3,7 @@ import '@fontsource/instrument-serif';
 import '@fontsource/instrument-serif/400-italic.css';
 import '@fontsource-variable/inter';
 import '@fontsource-variable/jetbrains-mono';
-// TEMPORARY: only needed while the 'slate' theme candidate is in play
-import '@fontsource-variable/space-grotesk';
 import '../styles/global.css';
-import ThemeSwitcher from '../components/ThemeSwitcher.astro';
 
 interface Props {
   title: string;
@@ -24,13 +21,6 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <!-- TEMPORARY: restore previewed theme before first paint -->
-    <script is:inline>
-      (() => {
-        const t = localStorage.getItem('theme-preview');
-        if (t && t !== 'forge') document.documentElement.dataset.theme = t;
-      })();
-    </script>
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
@@ -43,6 +33,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <meta name="generator" content={Astro.generator} />
   </head>
   <body>
+    <div class="sky" aria-hidden="true"></div>
     <header class="container">
       <nav>
         <a class="wordmark" href="/">Briggs<span>&nbsp;Bastian</span></a>
@@ -81,11 +72,95 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
         <span>Built with Astro · Deployed from a Nix flake</span>
       </div>
     </footer>
-    <ThemeSwitcher />
+
+    <script>
+      // Scroll reveal: html.js gates the hidden state (see global.css),
+      // so everything stays visible without JavaScript.
+      document.documentElement.classList.add('js');
+      const targets = document.querySelectorAll('.hero, .intro, .section, .block');
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        targets.forEach((t) => t.classList.add('in'));
+      } else {
+        const io = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              if (entry.isIntersecting) {
+                entry.target.classList.add('in');
+                io.unobserve(entry.target);
+              }
+            }
+          },
+          { threshold: 0.08 }
+        );
+        targets.forEach((t) => io.observe(t));
+      }
+    </script>
   </body>
 </html>
 
 <style>
+  /* Starfield: two layers of box-shadow "stars" in the page's upper
+     sky, fading out by ~520px. The second layer twinkles gently. */
+  .sky {
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 520px;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: -1;
+    mask-image: linear-gradient(180deg, #000 0%, #000 50%, transparent 100%);
+  }
+
+  .sky::before,
+  .sky::after {
+    content: '';
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    border-radius: 50%;
+  }
+
+  .sky::before {
+    background: rgba(205, 216, 236, 0.5);
+    box-shadow:
+      4vw 64px rgba(205, 216, 236, 0.4), 9vw 312px rgba(205, 216, 236, 0.3),
+      13vw 158px rgba(205, 216, 236, 0.45), 17vw 422px rgba(205, 216, 236, 0.25),
+      22vw 88px rgba(205, 216, 236, 0.35), 26vw 248px rgba(205, 216, 236, 0.45),
+      31vw 366px rgba(205, 216, 236, 0.3), 35vw 132px rgba(205, 216, 236, 0.4),
+      40vw 458px rgba(205, 216, 236, 0.25), 44vw 36px rgba(205, 216, 236, 0.45),
+      49vw 286px rgba(205, 216, 236, 0.3), 53vw 174px rgba(205, 216, 236, 0.4),
+      58vw 398px rgba(205, 216, 236, 0.3), 62vw 102px rgba(205, 216, 236, 0.45),
+      67vw 330px rgba(205, 216, 236, 0.25), 71vw 218px rgba(205, 216, 236, 0.4),
+      76vw 56px rgba(205, 216, 236, 0.35), 80vw 442px rgba(205, 216, 236, 0.3),
+      85vw 142px rgba(205, 216, 236, 0.45), 89vw 376px rgba(205, 216, 236, 0.25),
+      94vw 256px rgba(205, 216, 236, 0.4), 98vw 76px rgba(205, 216, 236, 0.35),
+      7vw 478px rgba(205, 216, 236, 0.25), 47vw 496px rgba(205, 216, 236, 0.2),
+      91vw 488px rgba(205, 216, 236, 0.2);
+  }
+
+  .sky::after {
+    background: rgba(232, 238, 252, 0.9);
+    box-shadow:
+      11vw 226px rgba(232, 238, 252, 0.7), 24vw 388px 1px rgba(232, 238, 252, 0.5),
+      38vw 68px rgba(232, 238, 252, 0.8), 51vw 342px rgba(232, 238, 252, 0.6),
+      64vw 186px 1px rgba(232, 238, 252, 0.55), 77vw 296px rgba(232, 238, 252, 0.7),
+      90vw 118px rgba(232, 238, 252, 0.75), 18vw 48px 1px rgba(245, 168, 60, 0.5),
+      70vw 432px rgba(157, 140, 255, 0.55), 33vw 472px rgba(232, 238, 252, 0.5),
+      57vw 24px rgba(232, 238, 252, 0.65), 96vw 408px rgba(232, 238, 252, 0.45);
+    animation: twinkle 5s ease-in-out infinite alternate;
+  }
+
+  @keyframes twinkle {
+    from { opacity: 0.45; }
+    to { opacity: 1; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sky::after {
+      animation: none;
+    }
+  }
+
   header {
     padding-block: 1.5rem;
   }
@@ -114,6 +189,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
   }
 
   .links a {
+    position: relative;
     font-family: var(--mono);
     font-size: 0.8125rem;
     letter-spacing: 0.04em;
@@ -121,8 +197,25 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     text-decoration: none;
   }
 
+  .links a::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -5px;
+    height: 1px;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 220ms ease;
+  }
+
   .links a:hover {
     color: var(--accent-bright);
+  }
+
+  .links a:hover::after {
+    transform: scaleX(1);
   }
 
   footer {

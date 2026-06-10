@@ -1,9 +1,10 @@
 # briggsbastian.com
 
-Personal portfolio and thought garden. Astro static site, "Forge" theme —
-warm near-black, editorial serif, and one accent color per section:
-ember (home), iris (projects), moss (garden), frost (resume). Accents are
-defined as `[data-accent]` token blocks in `src/styles/global.css`.
+Personal portfolio and thought garden. Astro static site, "Midnight
+Observatory" theme — deep blue-black, editorial serif, a faint starfield,
+and one accent color per section: ember (home), iris (projects), moss
+(garden), frost (resume), brass (ops). All design tokens live in
+`src/styles/global.css`; accents map through `[data-accent]` blocks.
 
 ## Stack
 
