@@ -45,6 +45,12 @@
   --accent-glow: rgba(171, 141, 245, 0.1);
 }
 
+[data-accent='brass'] {
+  --accent: #d9b257;
+  --accent-bright: #ecca7e;
+  --accent-glow: rgba(217, 178, 87, 0.1);
+}
+
 * {
   box-sizing: border-box;
   margin: 0;

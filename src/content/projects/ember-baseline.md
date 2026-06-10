@@ -27,5 +27,5 @@ system.
   instead of folklore.
 
 Grew out of the [homelab](/projects/homelab/) and feeds directly into
-[Hearthwatch](/projects/hearthwatch/)'s notion of what a managed host
+[NixRMM](/projects/nixrmm/)'s notion of what a managed host
 should look like.

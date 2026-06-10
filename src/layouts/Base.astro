@@ -8,8 +8,8 @@ import '../styles/global.css';
 interface Props {
   title: string;
   description: string;
-  /** Section color: ember = home, iris = projects, moss = garden, frost = resume */
-  accent?: 'ember' | 'iris' | 'moss' | 'frost';
+  /** Section color: ember = home, iris = projects, moss = garden, frost = resume, brass = ops */
+  accent?: 'ember' | 'iris' | 'moss' | 'frost' | 'brass';
 }
 
 const { title, description, accent = 'ember' } = Astro.props;
@@ -39,6 +39,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
         <div class="links">
           <a href="/projects/">Projects</a>
           <a href="/garden/">Garden</a>
+          <a href="/ops/">Ops</a>
           <a href="/resume/">Resume</a>
           <a href="https://github.com/briggsbastian" target="_blank" rel="noopener">GitHub ↗</a>
         </div>

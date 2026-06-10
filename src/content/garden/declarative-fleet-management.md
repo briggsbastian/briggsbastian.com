@@ -4,7 +4,7 @@ description: 'Why remote management tooling keeps becoming the breach, and what 
 stage: 'budding'
 planted: 2026-04-12
 tended: 2026-06-07
-topics: ['nixos', 'security', 'hearthwatch']
+topics: ['nixos', 'security', 'nixrmm']
 ---
 
 Strip the marketing off most RMM products and you find the same primitive:
@@ -33,7 +33,7 @@ Honesty requires the costs: ad-hoc "just run this on every box" is gone on
 purpose, break-glass needs a separate audited path, and none of this
 extends to the Windows fleet your MSP actually bills for. Scoped means
 *scoped*. I think the trade is right anyway — that's the bet
-[Hearthwatch](/projects/hearthwatch/) is making.
+[NixRMM](/projects/nixrmm/) is making.
 
 ## Open questions
 

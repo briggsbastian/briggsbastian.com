@@ -4,7 +4,7 @@ description: 'Souls-like PvP lives or dies on whether a trade felt legitimate. N
 stage: 'seedling'
 planted: 2026-05-20
 tended: 2026-05-28
-topics: ['gamedev', 'netcode', 'ashfall']
+topics: ['gamedev', 'netcode', 'gesture']
 ---
 
 Fighting games solved their netcode problem with rollback, and everyone now
@@ -30,4 +30,4 @@ Current thinking, loosely held:
 Suspicion to test: souls-likes have *less* of a netcode problem than
 fighting games, not more, and the genre's bad reputation comes from peer-to-peer
 legacy rather than anything inherent. If the suspicion holds,
-[Ashfall](/projects/ashfall/) ships server-authoritative and never looks back.
+[Gesture](/projects/gesture/) ships server-authoritative and never looks back.

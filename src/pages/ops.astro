@@ -1,0 +1,357 @@
+---
+import Base from '../layouts/Base.astro';
+
+/*
+ * ── THE OPS PAGE: what it is and what makes it "real" ──────────────
+ * This page is the DevOps legitimacy play. The thesis: anyone can list
+ * "Kubernetes, Terraform, CI/CD" on a resume — almost nobody publishes
+ * SLOs, postmortems, and runbooks. Those artifacts are how operators
+ * recognize each other. Everything below is a MOCK shaped like the real
+ * thing; each section's comment says what real artifact replaces it.
+ *
+ * TODO(briggs): every number, incident, and runbook on this page is
+ * invented. Replace section by section as the homelab generates real
+ * history. The structure is the part to keep.
+ */
+
+// SLOs — replace with targets you actually measure in Prometheus.
+// "Real" = each row backed by a recording rule + an Alertmanager alert
+// that fires when the error budget burns too fast.
+const slos = [
+  { service: 'briggsbastian.com', slo: '99.9% availability', window: '30d', current: '100%', budget: 'untouched' },
+  { service: 'Internal DNS (bonfire)', slo: '99.95% availability', window: '30d', current: '99.97%', budget: '41% burned' },
+  { service: 'Monitoring (watchtower)', slo: '99.5% availability', window: '30d', current: '99.81%', budget: '38% burned' },
+  { service: 'Backups (vault → offsite)', slo: 'RPO ≤ 24h, restore-tested monthly', window: '90d', current: 'RPO 6h', budget: 'last restore test: May 2026' },
+];
+
+// Pipeline — this one is mostly real already: it describes this site's
+// own CI. Point each stage at the actual workflow once the repo is public.
+const pipeline = [
+  { stage: 'Typecheck', detail: 'astro check — schema-validated content; bad frontmatter fails the build, not the reader.' },
+  { stage: 'Build', detail: 'Fully static output. The artifact that gets tested is the artifact that ships.' },
+  { stage: 'Deploy', detail: 'GitHub Actions publishes main to Pages. No human hands between merge and production.' },
+  { stage: 'Rollback', detail: 'git revert && git push. Recovery is the same pipeline, not a special ceremony.' },
+];
+
+// Postmortems — the highest-signal artifact on this page. One honest
+// writeup of a real homelab failure beats ten capability claims.
+// Format: blameless, timeline-aware, ends in a change that stuck.
+const incidents = [
+  {
+    id: 'INC-2026-03',
+    date: 'March 2026',
+    title: 'ZFS scrub + backup window collision degraded vault for 9 hours',
+    impact: 'Backup RPO breached (31h vs 24h target). No data loss.',
+    lesson:
+      'The alert fired; the runbook was wrong — it predated the pool layout. Fix: runbooks now live in the same repo as the configs they describe, and the monthly restore test exercises one runbook at random.',
+  },
+  {
+    id: 'INC-2026-01',
+    date: 'January 2026',
+    title: 'nftables rule rollout cut monitoring off from the lab VLAN',
+    impact: 'Blind to the fleet for 47 minutes. Nothing actually failed — the absence of green is not red.',
+    lesson:
+      'A firewall change passed review because the diff looked small. Fix: watchtower now has a dead-man switch — Alertmanager pages on missing data, not just bad data — and inter-VLAN changes get applied with a 5-minute auto-revert unless confirmed.',
+  },
+];
+
+// Runbooks — replace with links into the homelab repo (docs/ rendered or
+// public excerpts). Title + trigger + first action is the legitimacy
+// signal; full content can stay private.
+const runbooks = [
+  { name: 'vault-pool-degraded', trigger: 'ZFS pool status ≠ ONLINE', firstMove: 'Identify the failed vdev before touching anything — resilver beats restore.' },
+  { name: 'bonfire-failover', trigger: 'Router unreachable from mgmt VLAN', firstMove: 'Serial console first. The flake can rebuild it, but find out why before you do.' },
+  { name: 'restore-test-monthly', trigger: 'Calendar, first Saturday', firstMove: 'Pick a random dataset, restore to scratch, diff against source. Untested backups are prayers.' },
+  { name: 'cert-renewal-failed', trigger: 'ACME renewal alert at T-14 days', firstMove: 'Check DNS-01 challenge records before blaming the CA.' },
+];
+---
+
+<Base
+  title="Ops — Briggs Bastian"
+  description="SLOs, postmortems, and runbooks. How Briggs Bastian runs systems — the receipts, not the resume keywords."
+  accent="brass"
+>
+  <section class="container intro">
+    <p class="kicker">Operations</p>
+    <h1>The receipts.</h1>
+    <p class="lede">
+      Anyone can put "CI/CD" on a resume. This page is the part that's hard
+      to fake: the service levels I hold myself to, the incidents I've
+      caused and what they changed, and the runbooks I reach for at 3 a.m.
+      All of it from infrastructure I personally own and operate.
+    </p>
+  </section>
+
+  <section class="container block">
+    <p class="kicker">01 / Service level objectives</p>
+    <p class="blurb">
+      Targets are promises with math. Each one is backed by a Prometheus
+      recording rule, and the error budget — not my mood — decides whether
+      the next change ships.
+    </p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Service</th><th>Objective</th><th>Window</th><th>Current</th><th>Error budget</th></tr>
+        </thead>
+        <tbody>
+          {slos.map((row) => (
+            <tr>
+              <td class="mono">{row.service}</td>
+              <td>{row.slo}</td>
+              <td class="mono">{row.window}</td>
+              <td class="mono good">{row.current}</td>
+              <td>{row.budget}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="container block">
+    <p class="kicker">02 / The pipeline</p>
+    <p class="blurb">
+      This site ships itself — the pipeline below is the one that deployed
+      the page you're reading. Merge to main is the only deploy button.
+    </p>
+    <ol class="pipeline">
+      {pipeline.map((step, i) => (
+        <li>
+          <span class="step-no">{String(i + 1).padStart(2, '0')}</span>
+          <div>
+            <h3>{step.stage}</h3>
+            <p>{step.detail}</p>
+          </div>
+        </li>
+      ))}
+    </ol>
+  </section>
+
+  <section class="container block">
+    <p class="kicker">03 / Incidents & postmortems</p>
+    <p class="blurb">
+      Blameless, written within a week, and each one ends in a change that
+      stuck. An ops story without failures in it is a story about systems
+      nobody was watching.
+    </p>
+    <div class="incidents">
+      {incidents.map((inc) => (
+        <article class="incident">
+          <div class="inc-head">
+            <span class="mono inc-id">{inc.id}</span>
+            <span class="mono inc-date">{inc.date}</span>
+          </div>
+          <h3>{inc.title}</h3>
+          <p><strong>Impact:</strong> {inc.impact}</p>
+          <p><strong>What changed:</strong> {inc.lesson}</p>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <section class="container block">
+    <p class="kicker">04 / Runbooks</p>
+    <p class="blurb">
+      If a failure mode is known, the response shouldn't be improvised.
+      Runbooks live in the same repo as the configuration they describe —
+      they version together or they drift apart.
+    </p>
+    <ul class="runbooks">
+      {runbooks.map((rb) => (
+        <li>
+          <code class="rb-name">{rb.name}</code>
+          <div>
+            <p class="rb-trigger">Trigger: {rb.trigger}</p>
+            <p class="rb-move">{rb.firstMove}</p>
+          </div>
+        </li>
+      ))}
+    </ul>
+  </section>
+</Base>
+
+<style>
+  .intro {
+    padding-block: clamp(3rem, 8vw, 6rem);
+  }
+
+  .intro h1 {
+    font-size: clamp(2.75rem, 7vw, 5rem);
+    margin-block: 1rem 1.5rem;
+  }
+
+  .lede {
+    max-width: 38rem;
+    color: var(--muted);
+    font-size: 1.1rem;
+  }
+
+  .block {
+    padding-block: clamp(2.5rem, 6vw, 4rem);
+    border-top: 1px solid var(--line);
+  }
+
+  .blurb {
+    max-width: 38rem;
+    color: var(--muted);
+    margin-block: 0.75rem 2rem;
+  }
+
+  .mono {
+    font-family: var(--mono);
+    font-size: 0.8125rem;
+  }
+
+  .table-wrap {
+    overflow-x: auto;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+  }
+
+  th {
+    font-family: var(--mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--faint);
+    text-align: left;
+    padding: 0.6rem 1rem 0.6rem 0;
+    border-bottom: 1px solid var(--line-bright);
+  }
+
+  td {
+    padding: 0.8rem 1rem 0.8rem 0;
+    border-bottom: 1px solid var(--line);
+    color: var(--muted);
+    vertical-align: top;
+  }
+
+  td.good {
+    color: var(--accent-bright);
+  }
+
+  .pipeline {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr));
+    gap: 1.5rem;
+  }
+
+  .pipeline li {
+    display: flex;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+  }
+
+  .step-no {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--accent);
+  }
+
+  .pipeline h3 {
+    font-size: 1.3rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .pipeline p {
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+
+  .incidents {
+    display: grid;
+    gap: 1.25rem;
+  }
+
+  .incident {
+    max-width: 50rem;
+    padding: 1.75rem;
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    border-left: 2px solid var(--accent);
+    border-radius: 10px;
+  }
+
+  .inc-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .inc-id {
+    color: var(--accent);
+  }
+
+  .inc-date {
+    color: var(--faint);
+  }
+
+  .incident h3 {
+    font-size: 1.45rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .incident p {
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+
+  .incident p + p {
+    margin-top: 0.5rem;
+  }
+
+  .incident strong {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .runbooks {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    gap: 0;
+  }
+
+  .runbooks li {
+    display: grid;
+    grid-template-columns: 14rem 1fr;
+    gap: 1.5rem;
+    padding: 1.25rem 0.5rem;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .rb-name {
+    color: var(--accent);
+    font-size: 0.8125rem;
+  }
+
+  .rb-trigger {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--faint);
+    margin-bottom: 0.3rem;
+  }
+
+  .rb-move {
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+
+  @media (max-width: 40rem) {
+    .runbooks li {
+      grid-template-columns: 1fr;
+      gap: 0.5rem;
+    }
+  }
+</style>
