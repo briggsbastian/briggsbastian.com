@@ -57,7 +57,7 @@ const related = others
     {related.length > 0 && (
       <aside class="related">
         <p class="kicker">Elsewhere in the garden</p>
-        <div class="related-grid">
+        <div class="grid related-grid">
           {related.map((n) => <GardenNote note={n} />)}
         </div>
       </aside>
@@ -122,9 +122,6 @@ const related = others
 
   .related-grid {
     margin-top: 1.5rem;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(21rem, 100%), 1fr));
-    gap: 1.25rem;
     max-width: 46rem;
   }
 </style>

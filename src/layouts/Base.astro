@@ -67,7 +67,7 @@ const isActive = (prefix: string) => path.startsWith(prefix);
         <ul class="footer-links">
           <li>
             <a href="mailto:briggsbastian@pm.me">briggsbastian@pm.me</a>
-            <button class="copy" data-copy="briggsbastian@pm.me" aria-label="Copy email address">copy</button>
+            <button class="chip-btn copy" data-copy="briggsbastian@pm.me" aria-label="Copy email address">copy</button>
           </li>
           <li><a href="https://github.com/briggsbastian" target="_blank" rel="noopener">github.com/briggsbastian</a></li>
           <li><a href="https://linkedin.com/in/briggs-bastian" target="_blank" rel="noopener">linkedin.com/in/briggs-bastian</a></li>
@@ -414,26 +414,8 @@ const isActive = (prefix: string) => path.startsWith(prefix);
 
   .copy {
     margin-left: 0.6rem;
-    font-family: var(--mono);
     font-size: 0.6875rem;
-    letter-spacing: 0.05em;
-    color: var(--faint);
-    background: transparent;
-    border: 1px solid var(--line-bright);
-    border-radius: 999px;
     padding: 0.15rem 0.6rem;
-    cursor: pointer;
-    transition: color 120ms ease, border-color 120ms ease;
-  }
-
-  .copy:hover {
-    color: var(--accent-bright);
-    border-color: var(--accent);
-  }
-
-  .copy.done {
-    color: var(--moss);
-    border-color: var(--moss);
   }
 
   .colophon {

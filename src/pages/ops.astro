@@ -156,7 +156,7 @@ const runbooks = [
     </p>
     <ol class="pipeline">
       {pipeline.map((step, i) => (
-        <li>
+        <li class="panel" data-spot>
           <span class="step-no">{String(i + 1).padStart(2, '0')}</span>
           <div>
             <h3>{step.stage}</h3>
@@ -176,7 +176,7 @@ const runbooks = [
     </p>
     <div class="incidents">
       {incidents.map((inc) => (
-        <article class="incident">
+        <article class="incident panel" data-spot>
           <div class="inc-head">
             <span class="mono inc-id">{inc.id}</span>
             <span class="mono inc-date">{inc.date}</span>
@@ -199,7 +199,7 @@ const runbooks = [
     </p>
     <ol class="pipeline platform">
       {platform.map((item, i) => (
-        <li>
+        <li class="panel" data-spot>
           <span class="step-no">{String(i + 1).padStart(2, '0')}</span>
           <div>
             <h3>{item.name}</h3>
@@ -238,21 +238,6 @@ const runbooks = [
 </Base>
 
 <style>
-  .intro {
-    padding-block: clamp(3rem, 8vw, 6rem);
-  }
-
-  .intro h1 {
-    font-size: clamp(2.75rem, 7vw, 5rem);
-    margin-block: 1rem 1.5rem;
-  }
-
-  .lede {
-    max-width: 38rem;
-    color: var(--muted);
-    font-size: 1.1rem;
-  }
-
   .block {
     padding-block: clamp(2.5rem, 6vw, 4rem);
     border-top: 1px solid var(--line);
@@ -326,9 +311,6 @@ const runbooks = [
     display: flex;
     gap: 1rem;
     padding: 1.5rem;
-    background: var(--bg-raised);
-    border: 1px solid var(--line);
-    border-radius: 10px;
   }
 
   .step-no {
@@ -355,10 +337,7 @@ const runbooks = [
   .incident {
     max-width: 50rem;
     padding: 1.75rem;
-    background: var(--bg-raised);
-    border: 1px solid var(--line);
     border-left: 2px solid var(--accent);
-    border-radius: 10px;
   }
 
   .inc-head {

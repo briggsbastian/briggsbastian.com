@@ -38,6 +38,9 @@
   /* tighter column + larger rem base = the density of ~150% zoom */
   --content: 64rem;
   --prose: 38rem;
+
+  --radius: 14px;
+  --glass: linear-gradient(165deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.012));
 }
 
 /* ── Accent slot mapping ─────────────────────────────────────────
@@ -281,6 +284,148 @@ code {
 .section-head .more::after {
   content: ' →';
   color: var(--accent);
+}
+
+/* ── Surfaces: one card language for the whole site ──────────────
+   .panel = glass surface. Links get lift + accent border on hover.
+   The spotlight (cursor-following glow on [data-spot] elements, see
+   Base.astro) lives on ::before and FADES OUT on leave — position is
+   driven by --mx/--my, visibility purely by opacity.
+   ──────────────────────────────────────────────────────────────── */
+
+.panel {
+  position: relative;
+  overflow: hidden;
+  background: var(--glass);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  backdrop-filter: blur(8px);
+  transition: border-color 150ms ease, transform 150ms ease, box-shadow 150ms ease;
+}
+
+.panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    240px circle at var(--mx, 50%) var(--my, 50%),
+    var(--accent-glow),
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 300ms ease;
+  pointer-events: none;
+}
+
+.panel:hover::before {
+  opacity: 1;
+}
+
+a.panel {
+  text-decoration: none;
+}
+
+a.panel:hover {
+  color: inherit;
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  transform: translateY(-3px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4), 0 0 24px var(--accent-glow);
+}
+
+a.panel:hover h3 {
+  color: var(--accent-bright);
+}
+
+a.panel h3 {
+  transition: color 120ms ease;
+}
+
+/* ── Standard card grid ── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(20rem, 100%), 1fr));
+  gap: 1.25rem;
+}
+
+/* ── Page intro (the hero of every section page) ── */
+.intro {
+  padding-block: clamp(3rem, 8vw, 6rem);
+}
+
+.intro h1 {
+  font-size: clamp(2.75rem, 7vw, 5rem);
+  margin-block: 1rem 1.5rem;
+}
+
+.lede {
+  max-width: 38rem;
+  color: var(--muted);
+  font-size: 1.1rem;
+}
+
+/* ── Buttons ── */
+.btn {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 0.8125rem;
+  letter-spacing: 0.05em;
+  text-decoration: none;
+  padding: 0.8rem 1.7rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-bright));
+  color: var(--bg);
+  box-shadow: 0 6px 28px color-mix(in srgb, var(--accent) 30%, transparent);
+  transition: box-shadow 150ms ease, transform 150ms ease;
+}
+
+.btn:hover {
+  color: var(--bg);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 36px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.btn.ghost {
+  background: var(--bg-raised);
+  color: var(--muted);
+  border: 1px solid var(--line-bright);
+  box-shadow: none;
+}
+
+.btn.ghost:hover {
+  color: var(--accent-bright);
+  border-color: var(--accent);
+  box-shadow: 0 0 24px var(--accent-glow);
+}
+
+/* Small pill button: filters, copy actions */
+.chip-btn {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  background: var(--bg-raised);
+  border: 1px solid var(--line-bright);
+  border-radius: 999px;
+  padding: 0.35rem 0.85rem;
+  cursor: pointer;
+  transition: color 120ms ease, border-color 120ms ease, background 120ms ease;
+}
+
+.chip-btn:hover {
+  color: var(--accent-bright);
+  border-color: var(--accent);
+}
+
+.chip-btn.active {
+  color: var(--bg);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.chip-btn.done {
+  color: var(--moss);
+  border-color: var(--moss);
 }
 
 /* Pill tag for stacks/topics — tinted by the section accent */

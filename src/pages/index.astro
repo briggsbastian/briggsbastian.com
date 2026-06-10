@@ -158,9 +158,7 @@ const capabilities = [
     filter: drop-shadow(0 0 18px color-mix(in srgb, var(--accent) 55%, transparent));
   }
 
-  .lede {
-    max-width: 38rem;
-    color: var(--muted);
+  .hero .lede {
     font-size: 1.15rem;
   }
 
@@ -169,38 +167,6 @@ const capabilities = [
     flex-wrap: wrap;
     gap: 1rem;
     margin-top: 2.5rem;
-  }
-
-  .btn {
-    font-family: var(--mono);
-    font-size: 0.8125rem;
-    letter-spacing: 0.05em;
-    text-decoration: none;
-    padding: 0.8rem 1.7rem;
-    border-radius: 999px;
-    background: linear-gradient(135deg, var(--accent), var(--accent-bright));
-    color: var(--bg);
-    box-shadow: 0 6px 28px color-mix(in srgb, var(--accent) 30%, transparent);
-    transition: box-shadow 150ms ease, transform 150ms ease;
-  }
-
-  .btn:hover {
-    color: var(--bg);
-    transform: translateY(-1px);
-    box-shadow: 0 10px 36px color-mix(in srgb, var(--accent) 45%, transparent);
-  }
-
-  .btn.ghost {
-    background: var(--bg-raised);
-    color: var(--muted);
-    border: 1px solid var(--line-bright);
-    box-shadow: none;
-  }
-
-  .btn.ghost:hover {
-    color: var(--accent-bright);
-    border-color: var(--accent);
-    box-shadow: 0 0 24px var(--accent-glow);
   }
 
   .stats {
@@ -238,12 +204,6 @@ const capabilities = [
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--faint);
-  }
-
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(20rem, 100%), 1fr));
-    gap: 1.25rem;
   }
 
   .caps {
