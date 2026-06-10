@@ -3,8 +3,8 @@
  * Interactive homelab topology: a force-directed dot-web graph in
  * ~150 lines of vanilla JS. No D3, no framework — the physics is three
  * forces (pair repulsion, edge springs, weak centering) integrated per
- * frame. Solid edges are physical/VLAN links; dashed edges are
- * watchtower's Prometheus scrapes. Hover to focus, drag to rearrange.
+ * frame. Hover to focus, drag to rearrange. The media Proxmox host is
+ * described generically on purpose — keep it that way.
  */
 ---
 
@@ -13,7 +13,7 @@
     <g id="topo-edges"></g>
     <g id="topo-nodes"></g>
   </svg>
-  <figcaption id="topo-info">Hover or drag a node to explore the fleet. Dashed lines are monitoring scrapes.</figcaption>
+  <figcaption id="topo-info">Hover or drag a node to explore the fleet.</figcaption>
 </figure>
 
 <style is:global>
@@ -125,40 +125,40 @@
   }
 
   const DEFS: Def[] = [
-    { id: 'internet', label: 'internet', r: 11, c: 'none', blurb: 'ISP uplink. Untrusted by definition — the only thing it can reach is bonfire.' },
-    { id: 'bonfire', label: 'bonfire', r: 14, c: 'ember', blurb: 'NixOS router and firewall — nftables, DNS, WireGuard concentrator. The only door into the network.' },
-    { id: 'switch', label: 'switch', r: 9, c: 'none', blurb: 'L2 switch carrying the VLAN trunk. Segmentation policy is enforced upstream at bonfire.' },
-    { id: 'mgmt', label: 'vlan10 · mgmt', r: 11, c: 'frost', blurb: 'Management plane — switch UI and out-of-band consoles. Reachable from nowhere but itself.' },
-    { id: 'lan', label: 'vlan20 · lan', r: 11, c: 'moss', blurb: 'Trusted clients. Can reach lab services, never lab management.' },
-    { id: 'lab', label: 'vlan30 · lab', r: 11, c: 'iris', blurb: 'The fleet lives here. Accepts management traffic only from the mgmt VLAN.' },
-    { id: 'iot', label: 'vlan40 · iot', r: 11, c: 'brass', blurb: 'Untrusted devices. Internet egress only — zero east-west traffic, enforced in nftables.' },
-    { id: 'ipmi', label: 'ipmi', r: 7, c: 'frost', blurb: 'Out-of-band consoles for the fleet — the break-glass path when a host goes dark.' },
-    { id: 'clients', label: 'clients', r: 7, c: 'moss', blurb: 'Workstations and laptops on the trusted side of the house.' },
-    { id: 'devices', label: 'iot devices', r: 7, c: 'brass', blurb: 'Lightbulbs that want to talk to three continents. They get exactly one route: out.' },
-    { id: 'vault', label: 'vault', r: 9, c: 'iris', blurb: 'ZFS storage — backups, media, build artifacts. Snapshots ship offsite nightly.' },
-    { id: 'forge', label: 'forge', r: 9, c: 'iris', blurb: 'Build host — Nix remote builder, CI runners, OCI registry.' },
-    { id: 'watchtower', label: 'watchtower', r: 9, c: 'iris', blurb: 'Prometheus, Grafana, Alertmanager. The dashed lines are its scrapes — it watches everything.' },
-    { id: 'arena', label: 'arena', r: 9, c: 'iris', blurb: 'Game-server sandbox — where Gesture dedicated builds prove themselves before anyone else suffers them.' },
+    { id: 'internet', label: 'internet', r: 11, c: 'none', blurb: 'ISP uplink. Untrusted by definition — everything below it is policy.' },
+    { id: 'gateway', label: 'unifi gateway', r: 14, c: 'ember', blurb: 'UniFi gateway — routing, firewall rules, and the segmentation between trusted, IoT, and guest all live here.' },
+    { id: 'switch', label: 'unifi switching', r: 9, c: 'none', blurb: 'UniFi switching fabric carrying the networks below.' },
+    { id: 'lan', label: 'trusted lan', r: 11, c: 'moss', blurb: 'The trusted network — where the fleet lives.' },
+    { id: 'iot', label: 'iot', r: 11, c: 'brass', blurb: 'Streaming and smart-home devices. They talk out, not sideways.' },
+    { id: 'guest', label: 'guest', r: 11, c: 'frost', blurb: 'UniFi guest network — visitors get internet and nothing else.' },
+    { id: 'pve-media', label: 'pve · media', r: 9, c: 'iris', blurb: 'Proxmox host running NixOS VMs for the media stack — acquisition through playback.' },
+    { id: 'pve-sec', label: 'pve · security', r: 9, c: 'iris', blurb: 'Proxmox host for the security VM deployment — where the day job’s instincts get a sandbox.' },
+    { id: 'pve-net', label: 'pve · netmgmt', r: 9, c: 'iris', blurb: 'Proxmox host for network management VMs — keeping the UniFi estate observable and honest.' },
+    { id: 'gaming', label: 'gaming rig', r: 9, c: 'iris', blurb: 'NixOS gaming desktop — proof the declarative life survives contact with GPU drivers.' },
+    { id: 'gameserver', label: 'game server', r: 9, c: 'iris', blurb: 'GNOME NixOS box hosting game servers — where Gesture’s dedicated builds will land.' },
+    { id: 'nas', label: 'nas · ubuntu', r: 9, c: 'none', blurb: 'Ubuntu 24.04 LTS NAS — bulk storage, and the one holdout from the NixOS takeover.' },
+    { id: 'tv1', label: 'tv', r: 7, c: 'brass', blurb: 'Smart TV — quarantined on the IoT network like the chatty appliance it is.' },
+    { id: 'tv2', label: 'tv', r: 7, c: 'brass', blurb: 'The other smart TV. Same quarantine, same reasons.' },
+    { id: 'homepod', label: 'homepod', r: 7, c: 'brass', blurb: 'Apple HomePod. It needs to hear "set a timer," not see the lan.' },
+    { id: 'guests', label: 'guest devices', r: 7, c: 'frost', blurb: 'Whatever friends bring over — captive, segregated, forgotten.' },
   ];
 
   const EDGES: { a: string; b: string; dash?: boolean }[] = [
-    { a: 'internet', b: 'bonfire' },
-    { a: 'bonfire', b: 'switch' },
-    { a: 'switch', b: 'mgmt' },
+    { a: 'internet', b: 'gateway' },
+    { a: 'gateway', b: 'switch' },
     { a: 'switch', b: 'lan' },
-    { a: 'switch', b: 'lab' },
     { a: 'switch', b: 'iot' },
-    { a: 'mgmt', b: 'ipmi' },
-    { a: 'lan', b: 'clients' },
-    { a: 'iot', b: 'devices' },
-    { a: 'lab', b: 'vault' },
-    { a: 'lab', b: 'forge' },
-    { a: 'lab', b: 'watchtower' },
-    { a: 'lab', b: 'arena' },
-    { a: 'watchtower', b: 'bonfire', dash: true },
-    { a: 'watchtower', b: 'vault', dash: true },
-    { a: 'watchtower', b: 'forge', dash: true },
-    { a: 'watchtower', b: 'arena', dash: true },
+    { a: 'switch', b: 'guest' },
+    { a: 'lan', b: 'pve-media' },
+    { a: 'lan', b: 'pve-sec' },
+    { a: 'lan', b: 'pve-net' },
+    { a: 'lan', b: 'gaming' },
+    { a: 'lan', b: 'gameserver' },
+    { a: 'lan', b: 'nas' },
+    { a: 'iot', b: 'tv1' },
+    { a: 'iot', b: 'tv2' },
+    { a: 'iot', b: 'homepod' },
+    { a: 'guest', b: 'guests' },
   ];
 
   const W = 860;

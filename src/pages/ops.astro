@@ -14,14 +14,15 @@ import Base from '../layouts/Base.astro';
  * history. The structure is the part to keep.
  */
 
-// SLOs — replace with targets you actually measure in Prometheus.
-// "Real" = each row backed by a recording rule + an Alertmanager alert
-// that fires when the error budget burns too fast.
+// SLOs — replace with targets you actually measure once monitoring is
+// stood up. "Real" = each row backed by a recorded signal + an alert
+// that fires when the error budget burns too fast (tool of your choice;
+// NixRMM snapshots can carry several of these).
 const slos = [
   { service: 'briggsbastian.com', slo: '99.9% availability', window: '30d', current: '100%', budget: 'untouched' },
-  { service: 'Internal DNS (bonfire)', slo: '99.95% availability', window: '30d', current: '99.97%', budget: '41% burned' },
-  { service: 'Monitoring (watchtower)', slo: '99.5% availability', window: '30d', current: '99.81%', budget: '38% burned' },
-  { service: 'Backups (vault → offsite)', slo: 'RPO ≤ 24h, restore-tested monthly', window: '90d', current: 'RPO 6h', budget: 'last restore test: May 2026' },
+  { service: 'UniFi network core', slo: '99.9% availability', window: '30d', current: '99.96%', budget: '24% burned' },
+  { service: 'Media stack (Proxmox VMs)', slo: '99.5% availability', window: '30d', current: '99.74%', budget: '39% burned' },
+  { service: 'Backups (NAS → offsite)', slo: 'RPO ≤ 24h, restore-tested monthly', window: '90d', current: 'RPO 8h', budget: 'last restore test: May 2026' },
 ];
 
 // Pipeline — this one is mostly real already: it describes this site's
@@ -40,18 +41,18 @@ const incidents = [
   {
     id: 'INC-2026-03',
     date: 'March 2026',
-    title: 'ZFS scrub + backup window collision degraded vault for 9 hours',
+    title: 'Backup job + media library scan collided, saturating the NAS for 9 hours',
     impact: 'Backup RPO breached (31h vs 24h target). No data loss.',
     lesson:
-      'The alert fired; the runbook was wrong — it predated the pool layout. Fix: runbooks now live in the same repo as the configs they describe, and the monthly restore test exercises one runbook at random.',
+      'The runbook was wrong — it predated the current storage layout. Fix: runbooks now live in the same repo as the configs they describe, and the monthly restore test exercises one runbook at random.',
   },
   {
     id: 'INC-2026-01',
     date: 'January 2026',
-    title: 'nftables rule rollout cut monitoring off from the lab VLAN',
-    impact: 'Blind to the fleet for 47 minutes. Nothing actually failed — the absence of green is not red.',
+    title: 'UniFi firewall rule rollout cut management access to the Proxmox hosts',
+    impact: 'Blind to the hypervisors for 47 minutes. Nothing actually failed — but the absence of green is not red.',
     lesson:
-      'A firewall change passed review because the diff looked small. Fix: watchtower now has a dead-man switch — Alertmanager pages on missing data, not just bad data — and inter-VLAN changes get applied with a 5-minute auto-revert unless confirmed.',
+      'A firewall change passed review because the diff looked small. Fix: connectivity checks now run from both sides of every segment boundary after a change, and inter-network rule changes get a 5-minute auto-revert window unless confirmed.',
   },
 ];
 
@@ -59,10 +60,10 @@ const incidents = [
 // public excerpts). Title + trigger + first action is the legitimacy
 // signal; full content can stay private.
 const runbooks = [
-  { name: 'vault-pool-degraded', trigger: 'ZFS pool status ≠ ONLINE', firstMove: 'Identify the failed vdev before touching anything — resilver beats restore.' },
-  { name: 'bonfire-failover', trigger: 'Router unreachable from mgmt VLAN', firstMove: 'Serial console first. The flake can rebuild it, but find out why before you do.' },
+  { name: 'nas-array-degraded', trigger: 'Disk/array health alert on the NAS', firstMove: 'Identify the failing disk before touching anything — rebuild beats restore.' },
+  { name: 'gateway-unreachable', trigger: 'UniFi gateway offline from the trusted lan', firstMove: 'Console in locally before power-cycling. Find out why before you make it forget.' },
   { name: 'restore-test-monthly', trigger: 'Calendar, first Saturday', firstMove: 'Pick a random dataset, restore to scratch, diff against source. Untested backups are prayers.' },
-  { name: 'cert-renewal-failed', trigger: 'ACME renewal alert at T-14 days', firstMove: 'Check DNS-01 challenge records before blaming the CA.' },
+  { name: 'nixos-vm-wont-boot', trigger: 'NixOS VM stuck after a config change', firstMove: 'Boot the previous generation from the Proxmox console — generations exist for exactly this.' },
 ];
 ---
 
@@ -85,9 +86,9 @@ const runbooks = [
   <section class="container block">
     <div class="block-head" data-num="01"><p class="kicker">Service level objectives</p></div>
     <p class="blurb">
-      Targets are promises with math. Each one is backed by a Prometheus
-      recording rule, and the error budget — not my mood — decides whether
-      the next change ships.
+      Targets are promises with math. Each one needs a measured signal
+      behind it, and the error budget — not my mood — decides whether the
+      next change ships.
     </p>
     <div class="table-wrap">
       <table>

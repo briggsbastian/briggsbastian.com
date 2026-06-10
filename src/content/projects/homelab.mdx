@@ -1,52 +1,57 @@
 ---
 title: 'The Homelab'
-summary: 'A fully declarative NixOS fleet at home: every host rebuildable from one repo, monitored, backed up, and used as the proving ground for everything else.'
+summary: 'A UniFi-backed network with NixOS running the bones: three Proxmox hosts full of NixOS VMs, a declarative gaming rig, a game server, and one Ubuntu NAS holdout.'
 status: 'active'
-year: '2023 — ongoing'
-stack: ['NixOS', 'Prometheus', 'Grafana', 'WireGuard', 'ZFS']
+year: 'ongoing'
+stack: ['NixOS', 'Proxmox', 'UniFi', 'Ubuntu 24.04']
 featured: false
 order: 4
 ---
 
 import TopologyGraph from '../../components/TopologyGraph.astro';
 
-{/* TODO(briggs): the topology, hostnames, and VLAN scheme are a plausible
-    mock — swap in your actual hosts and addressing (the graph data lives
-    in src/components/TopologyGraph.astro). */}
+{/* The media host is described generically on purpose — keep it that way.
+    Graph data lives in src/components/TopologyGraph.astro. */}
 
-Every host in the lab — routing, storage, builds, monitoring, game-server
-sandboxes — is defined in a single Nix flake. If a machine dies, recovery is
-`nixos-install` plus a hostname, not an afternoon of archaeology.
+UniFi runs the network; NixOS runs the bones. The lab is a mixed estate —
+three Proxmox hypervisors carrying NixOS VMs, NixOS on the metal where it
+matters, and exactly one machine that got grandfathered in. There is no
+wiki for it; this page is the closest thing the lab has to up-to-date
+documentation, which is itself an argument for the declarative parts.
 
 ## Base topology
 
 <TopologyGraph />
 
-The lab VLAN is where the fleet lives:
+The trusted network is where the fleet lives:
 
-| Host         | Role                                                        |
-| ------------ | ----------------------------------------------------------- |
-| `bonfire`    | Router, firewall (nftables), DNS, WireGuard concentrator    |
-| `vault`      | ZFS storage — datasets for backups, media, build artifacts  |
-| `forge`      | Build host — Nix remote builder, CI runners, OCI registry   |
-| `watchtower` | Prometheus, Grafana, Alertmanager, log aggregation          |
-| `arena`      | Game-server sandbox — where Gesture dedicated builds land   |
+| Host             | Role                                                       |
+| ---------------- | ---------------------------------------------------------- |
+| `pve · media`    | Proxmox host — NixOS VMs for the media stack               |
+| `pve · security` | Proxmox host — security tooling VM deployment              |
+| `pve · netmgmt`  | Proxmox host — network management VMs                      |
+| `gaming rig`     | NixOS desktop, GPU and all                                 |
+| `game server`    | GNOME NixOS box for hosting game servers                   |
+| `nas`            | Ubuntu 24.04 LTS — bulk storage, the non-NixOS holdout     |
 
-Segmentation rules are the interesting part: IoT can reach the internet
-and nothing else, the lab VLAN accepts management traffic only from
-`mgmt`, and every inter-VLAN rule is an nftables entry in the flake —
-reviewed in a diff like everything else.
+Segmentation is UniFi policy at the gateway: the IoT network holds two
+smart TVs and a HomePod that can reach the internet but not the lan, and
+visitors land on a guest network that gets them online and nowhere else.
 
 ## What it proves
 
-- **Configuration is the documentation.** There is no wiki page that can
-  drift from reality, because reality is generated from the repo.
-- **Observability at home-scale.** Prometheus scrapes everything; Grafana
-  dashboards and alerting mean the lab pages me before family members do.
-- **Real constraints.** Backups (ZFS snapshots shipped offsite), secret
-  management, and WireGuard-only remote access — practiced where the blast
-  radius is my own evening, so they're reflexes where it counts.
+- **Declarative where it counts.** The NixOS machines — VMs and metal —
+  are rebuildable from configuration, not from memory. The undocumented
+  parts of the lab are, not coincidentally, the parts that aren't NixOS
+  yet.
+- **Virtualization as a discipline.** Three hypervisors with deliberate
+  roles — media, security, network management — instead of one box
+  running everything that seemed like a good idea at 1 a.m.
+- **Pragmatism over purity.** The NAS runs Ubuntu LTS because storage
+  should be boring, and migrations should happen for reasons. It's on the
+  list; it's not urgent.
 
-The lab is also the dogfood pen for [NixRMM](/projects/nixrmm/): every
-design decision in the RMM gets tested against this fleet first, and
-`arena` keeps [Gesture](/projects/gesture/)'s server builds honest.
+The lab is also the dogfood pen for [NixRMM](/projects/nixrmm/): the
+NixOS VMs across the Proxmox hosts are exactly the kind of fleet its
+Phase 1 targets — and the game server is where
+[Gesture](/projects/gesture/)'s dedicated builds will prove themselves.

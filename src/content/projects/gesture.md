@@ -74,9 +74,8 @@ enjoy most:
 - A small allocator spins regional instances up when matchmaking demands
   and tears them down when lobbies drain. Idle fleets are a bill, not a
   flex.
-- Server fleets emit the same Prometheus metrics as everything else I run,
-  so a bad netcode deploy shows up as a graph before it shows up as a
-  forum thread.
+- Server fleets emit health metrics from day one, so a bad netcode deploy
+  shows up as a graph before it shows up as a forum thread.
 
 Building the game and building the platform it runs on are the same
 project — which is exactly why it's on this site.
