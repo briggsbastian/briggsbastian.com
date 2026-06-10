@@ -1,0 +1,77 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  note: CollectionEntry<'garden'>;
+}
+
+const stageGlyph = { seedling: '○', budding: '◐', evergreen: '●' } as const;
+
+const { note } = Astro.props;
+const { title, description, stage, tended } = note.data;
+const tendedLabel = tended.toLocaleDateString('en-US', {
+  year: 'numeric',
+  month: 'short',
+  day: 'numeric',
+});
+---
+
+<a class="note" href={`/garden/${note.id}/`}>
+  <span class="stage" title={stage}>{stageGlyph[stage]} {stage}</span>
+  <div>
+    <h3>{title}</h3>
+    <p>{description}</p>
+  </div>
+  <span class="tended">tended {tendedLabel}</span>
+</a>
+
+<style>
+  .note {
+    display: grid;
+    grid-template-columns: 8rem 1fr auto;
+    gap: 1.5rem;
+    align-items: baseline;
+    padding: 1.5rem 0.5rem;
+    border-bottom: 1px solid var(--line);
+    text-decoration: none;
+    transition: background 120ms ease;
+  }
+
+  .note:hover {
+    color: inherit;
+    background: var(--accent-glow);
+  }
+
+  .note:hover h3 {
+    color: var(--accent-bright);
+  }
+
+  .stage,
+  .tended {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--faint);
+  }
+
+  .stage {
+    color: var(--accent);
+  }
+
+  h3 {
+    font-size: 1.45rem;
+    transition: color 120ms ease;
+  }
+
+  p {
+    color: var(--muted);
+    font-size: 0.95rem;
+    margin-top: 0.35rem;
+  }
+
+  @media (max-width: 40rem) {
+    .note {
+      grid-template-columns: 1fr;
+      gap: 0.5rem;
+    }
+  }
+</style>

@@ -1,0 +1,95 @@
+---
+import { getCollection, render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+
+export async function getStaticPaths() {
+  const projects = await getCollection('projects');
+  return projects.map((project) => ({
+    params: { slug: project.id },
+    props: { project },
+  }));
+}
+
+const { project } = Astro.props;
+const { title, summary, status, year, stack, links } = project.data;
+const { Content } = await render(project);
+
+const statusLabel = {
+  'in-development': 'In development',
+  active: 'Active',
+  shipped: 'Shipped',
+  archived: 'Archived',
+}[status];
+---
+
+<Base title={`${title} — Briggs Bastian`} description={summary}>
+  <article class="container">
+    <header>
+      <p class="kicker"><a href="/projects/">Projects</a> / {year}</p>
+      <h1>{title}</h1>
+      <p class="summary">{summary}</p>
+      <div class="meta">
+        <span class="chip">{statusLabel}</span>
+        <ul class="stack">
+          {stack.map((item) => <li class="tag">{item}</li>)}
+        </ul>
+        {links.github && (
+          <a class="ext" href={links.github} target="_blank" rel="noopener">Source ↗</a>
+        )}
+        {links.site && (
+          <a class="ext" href={links.site} target="_blank" rel="noopener">Visit ↗</a>
+        )}
+      </div>
+    </header>
+    <div class="prose">
+      <Content />
+    </div>
+  </article>
+</Base>
+
+<style>
+  article {
+    padding-block: clamp(3rem, 8vw, 5rem);
+  }
+
+  .kicker a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  h1 {
+    font-size: clamp(2.75rem, 7vw, 4.5rem);
+    margin-block: 1rem;
+  }
+
+  .summary {
+    max-width: var(--prose);
+    color: var(--muted);
+    font-size: 1.2rem;
+  }
+
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1.25rem;
+    margin-block: 2rem 3.5rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .stack {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .ext {
+    font-family: var(--mono);
+    font-size: 0.8125rem;
+    color: var(--accent);
+    text-decoration: none;
+  }
+</style>

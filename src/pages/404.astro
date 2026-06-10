@@ -1,0 +1,31 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="404 — Briggs Bastian" description="Page not found.">
+  <section class="container">
+    <p class="kicker">404</p>
+    <h1>You died.</h1>
+    <p>
+      This page doesn't exist — or it was lost on the way back to its
+      bloodstain. <a href="/">Return to the bonfire</a>.
+    </p>
+  </section>
+</Base>
+
+<style>
+  section {
+    padding-block: clamp(6rem, 15vw, 12rem);
+  }
+
+  h1 {
+    font-size: clamp(3rem, 10vw, 7rem);
+    color: var(--accent);
+    margin-block: 1rem 1.5rem;
+  }
+
+  p {
+    color: var(--muted);
+    max-width: 32rem;
+  }
+</style>

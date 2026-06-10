@@ -1,0 +1,169 @@
+---
+import '@fontsource/instrument-serif';
+import '@fontsource/instrument-serif/400-italic.css';
+import '@fontsource-variable/inter';
+import '@fontsource-variable/jetbrains-mono';
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description: string;
+  /** 'ember' for the main site, 'moss' for the thought garden */
+  accent?: 'ember' | 'moss';
+}
+
+const { title, description, accent = 'ember' } = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+
+<!doctype html>
+<html lang="en" data-accent={accent}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
+    <meta name="generator" content={Astro.generator} />
+  </head>
+  <body>
+    <header class="container">
+      <nav>
+        <a class="wordmark" href="/">Briggs<span>&nbsp;Bastian</span></a>
+        <div class="links">
+          <a href="/projects/">Projects</a>
+          <a href="/garden/">Garden</a>
+          <a href="https://github.com/briggsbastian" target="_blank" rel="noopener">GitHub ↗</a>
+        </div>
+      </nav>
+    </header>
+
+    <main>
+      <slot />
+    </main>
+
+    <footer>
+      <div class="container footer-inner">
+        <div>
+          <p class="kicker">Get in touch</p>
+          <h2 class="footer-title">Say hello.</h2>
+          <p class="footer-blurb">
+            Open to interesting problems in infrastructure, security, and the
+            occasional invader in the arena.
+          </p>
+        </div>
+        <ul class="footer-links">
+          <li><a href="mailto:briggsbastian@pm.me">briggsbastian@pm.me</a></li>
+          <li><a href="https://github.com/briggsbastian" target="_blank" rel="noopener">github.com/briggsbastian</a></li>
+          <li><a href="https://linkedin.com/in/briggs-bastian" target="_blank" rel="noopener">linkedin.com/in/briggs-bastian</a></li>
+        </ul>
+      </div>
+      <div class="container colophon">
+        <span>© {new Date().getFullYear()} Briggs Bastian — Seattle, WA</span>
+        <span>Built with Astro · Deployed from a Nix flake</span>
+      </div>
+    </footer>
+  </body>
+</html>
+
+<style>
+  header {
+    padding-block: 1.5rem;
+  }
+
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .wordmark {
+    font-family: var(--serif);
+    font-size: 1.35rem;
+    text-decoration: none;
+    color: var(--text);
+  }
+
+  .wordmark span {
+    color: var(--accent);
+  }
+
+  .links {
+    display: flex;
+    gap: clamp(1rem, 3vw, 2rem);
+  }
+
+  .links a {
+    font-family: var(--mono);
+    font-size: 0.8125rem;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    text-decoration: none;
+  }
+
+  .links a:hover {
+    color: var(--accent-bright);
+  }
+
+  footer {
+    border-top: 1px solid var(--line);
+    margin-top: clamp(4rem, 9vw, 7rem);
+    background: var(--bg-raised);
+  }
+
+  .footer-inner {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: end;
+    gap: 2rem;
+    padding-block: clamp(3rem, 6vw, 5rem);
+  }
+
+  .footer-title {
+    font-size: clamp(2.5rem, 6vw, 4rem);
+    margin-block: 0.75rem;
+  }
+
+  .footer-blurb {
+    color: var(--muted);
+    max-width: 28rem;
+  }
+
+  .footer-links {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    gap: 0.6rem;
+    font-family: var(--mono);
+    font-size: 0.875rem;
+  }
+
+  .footer-links a {
+    color: var(--muted);
+    text-decoration: none;
+  }
+
+  .footer-links a:hover {
+    color: var(--accent-bright);
+  }
+
+  .colophon {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding-block: 1.25rem;
+    border-top: 1px solid var(--line);
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--faint);
+  }
+</style>

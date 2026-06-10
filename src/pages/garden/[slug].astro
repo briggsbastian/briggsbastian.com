@@ -1,0 +1,83 @@
+---
+import { getCollection, render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+
+export async function getStaticPaths() {
+  const notes = await getCollection('garden');
+  return notes.map((note) => ({
+    params: { slug: note.id },
+    props: { note },
+  }));
+}
+
+const stageGlyph = { seedling: '○', budding: '◐', evergreen: '●' } as const;
+
+const { note } = Astro.props;
+const { title, description, stage, planted, tended, topics } = note.data;
+const { Content } = await render(note);
+
+const fmt = (d: Date) =>
+  d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+---
+
+<Base title={`${title} — Thought Garden`} description={description} accent="moss">
+  <article class="container">
+    <header>
+      <p class="kicker"><a href="/garden/">Garden</a> / {stageGlyph[stage]} {stage}</p>
+      <h1>{title}</h1>
+      <div class="meta">
+        <span>planted {fmt(planted)}</span>
+        <span>last tended {fmt(tended)}</span>
+        {topics.map((topic) => <span class="tag">{topic}</span>)}
+      </div>
+    </header>
+    <div class="prose">
+      <Content />
+    </div>
+    <p class="caveat">
+      {stage === 'seedling' && 'A seedling — barely more than a planted thought. Expect it to change shape.'}
+      {stage === 'budding' && 'A budding note — taking form, still being tended.'}
+      {stage === 'evergreen' && 'An evergreen — as settled as anything in a garden gets.'}
+    </p>
+  </article>
+</Base>
+
+<style>
+  article {
+    padding-block: clamp(3rem, 8vw, 5rem);
+  }
+
+  .kicker a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  h1 {
+    font-size: clamp(2.5rem, 6vw, 4rem);
+    margin-block: 1rem;
+    max-width: 50rem;
+  }
+
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1.25rem;
+    margin-block: 1.5rem 3rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--line);
+    font-family: var(--mono);
+    font-size: 0.8125rem;
+    color: var(--faint);
+  }
+
+  .caveat {
+    max-width: var(--prose);
+    margin-top: 3.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--line);
+    font-style: italic;
+    color: var(--faint);
+    font-size: 0.95rem;
+  }
+</style>

@@ -1,0 +1,58 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import GardenNote from '../../components/GardenNote.astro';
+
+const stageOrder = { evergreen: 0, budding: 1, seedling: 2 } as const;
+
+const notes = (await getCollection('garden')).sort(
+  (a, b) =>
+    stageOrder[a.data.stage] - stageOrder[b.data.stage] ||
+    b.data.tended.valueOf() - a.data.tended.valueOf()
+);
+---
+
+<Base
+  title="Thought Garden — Briggs Bastian"
+  description="A digital garden of growing notes on infrastructure, security, game development, and whatever else takes root."
+  accent="moss"
+>
+  <section class="container intro">
+    <p class="kicker">Thought garden</p>
+    <h1>Notes that grow.</h1>
+    <p class="lede">
+      This isn't a blog. Nothing here is finished, and that's the point —
+      ideas get planted as <strong>○ seedlings</strong>, tended into
+      <strong>◐ budding</strong> notes, and a few mature into
+      <strong>● evergreens</strong>. Visit twice and you'll read two
+      different gardens.
+    </p>
+  </section>
+
+  <section class="container">
+    {notes.map((note) => <GardenNote note={note} />)}
+  </section>
+</Base>
+
+<style>
+  .intro {
+    padding-block: clamp(3rem, 8vw, 6rem);
+  }
+
+  .intro h1 {
+    font-size: clamp(2.75rem, 7vw, 5rem);
+    margin-block: 1rem 1.5rem;
+  }
+
+  .lede {
+    max-width: 38rem;
+    color: var(--muted);
+    font-size: 1.1rem;
+  }
+
+  .lede strong {
+    color: var(--accent-bright);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+</style>

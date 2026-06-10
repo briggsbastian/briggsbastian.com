@@ -1,0 +1,85 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  project: CollectionEntry<'projects'>;
+}
+
+const { project } = Astro.props;
+const { title, summary, status, year, stack } = project.data;
+
+const statusLabel: Record<typeof status, string> = {
+  'in-development': 'In development',
+  active: 'Active',
+  shipped: 'Shipped',
+  archived: 'Archived',
+};
+---
+
+<a class="card" href={`/projects/${project.id}/`}>
+  <div class="meta">
+    <span class="chip">{statusLabel[status]}</span>
+    <span class="year">{year}</span>
+  </div>
+  <h3>{title}</h3>
+  <p>{summary}</p>
+  <ul class="stack">
+    {stack.map((item) => <li class="tag">{item}</li>)}
+  </ul>
+</a>
+
+<style>
+  .card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    padding: 1.75rem;
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    text-decoration: none;
+    transition: border-color 150ms ease, transform 150ms ease, box-shadow 150ms ease;
+  }
+
+  .card:hover {
+    color: inherit;
+    border-color: var(--line-bright);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35), 0 0 0 1px var(--accent-glow);
+  }
+
+  .card:hover h3 {
+    color: var(--accent-bright);
+  }
+
+  .meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .year {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--faint);
+  }
+
+  h3 {
+    font-size: 1.6rem;
+    transition: color 120ms ease;
+  }
+
+  p {
+    color: var(--muted);
+    font-size: 0.95rem;
+    flex-grow: 1;
+  }
+
+  .stack {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+</style>

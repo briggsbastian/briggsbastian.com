@@ -1,0 +1,234 @@
+/* ── The Forge theme ─────────────────────────────────────────────
+   Warm near-black, ember accent, editorial serif display type.
+   The thought garden swaps the ember for moss via [data-accent].
+   ──────────────────────────────────────────────────────────────── */
+
+:root {
+  --bg: #0c0a08;
+  --bg-raised: #141109;
+  --bg-overlay: #1b1710;
+  --line: #262019;
+  --line-bright: #3b3123;
+
+  --text: #ece5d8;
+  --muted: #a59b88;
+  --faint: #6f6759;
+
+  --accent: #ff8a3d;
+  --accent-bright: #ffaa6b;
+  --accent-glow: rgba(255, 138, 61, 0.12);
+
+  --serif: 'Instrument Serif', Georgia, 'Times New Roman', serif;
+  --sans: 'Inter Variable', system-ui, -apple-system, sans-serif;
+  --mono: 'JetBrains Mono Variable', ui-monospace, 'Cascadia Mono', monospace;
+
+  --content: 72rem;
+  --prose: 42rem;
+}
+
+[data-accent='moss'] {
+  --accent: #a8c686;
+  --accent-bright: #c2dba4;
+  --accent-glow: rgba(168, 198, 134, 0.1);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+}
+
+html {
+  color-scheme: dark;
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  /* faint vertical ember gradient at the very top of the page */
+  background-image: linear-gradient(180deg, var(--accent-glow), transparent 28rem);
+  background-repeat: no-repeat;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+h1, h2, h3 {
+  font-family: var(--serif);
+  font-weight: 400;
+  line-height: 1.08;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+a {
+  color: inherit;
+  text-decoration-color: var(--line-bright);
+  text-underline-offset: 0.2em;
+  transition: color 120ms ease, text-decoration-color 120ms ease;
+}
+
+a:hover {
+  color: var(--accent-bright);
+  text-decoration-color: var(--accent);
+}
+
+code {
+  font-family: var(--mono);
+  font-size: 0.875em;
+}
+
+.container {
+  max-width: var(--content);
+  margin-inline: auto;
+  padding-inline: clamp(1.25rem, 4vw, 2.5rem);
+}
+
+/* Mono uppercase section label, e.g. "01 / SELECTED WORK" */
+.kicker {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.section {
+  padding-block: clamp(4rem, 9vw, 7rem);
+  border-top: 1px solid var(--line);
+}
+
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: clamp(2rem, 5vw, 3.5rem);
+}
+
+.section-head h2 {
+  font-size: clamp(2rem, 5vw, 3rem);
+  margin-top: 0.75rem;
+}
+
+.section-head .more {
+  font-family: var(--mono);
+  font-size: 0.8125rem;
+  color: var(--muted);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.section-head .more::after {
+  content: ' →';
+  color: var(--accent);
+}
+
+/* Pill tag for stacks/topics */
+.tag {
+  font-family: var(--mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  border: 1px solid var(--line-bright);
+  border-radius: 999px;
+  padding: 0.2rem 0.65rem;
+  white-space: nowrap;
+}
+
+/* Status chip (projects) and stage chip (garden) */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: var(--mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent-bright);
+}
+
+.chip::before {
+  content: '';
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+}
+
+/* Markdown body styling */
+.prose {
+  max-width: var(--prose);
+}
+
+.prose > * + * {
+  margin-top: 1.1em;
+}
+
+.prose h2 {
+  font-size: 1.75rem;
+  margin-top: 2.2em;
+}
+
+.prose h3 {
+  font-size: 1.35rem;
+  margin-top: 1.8em;
+}
+
+.prose ul, .prose ol {
+  padding-left: 1.4rem;
+}
+
+.prose li + li {
+  margin-top: 0.4em;
+}
+
+.prose blockquote {
+  border-left: 2px solid var(--accent);
+  padding-left: 1.25rem;
+  color: var(--muted);
+  font-style: italic;
+}
+
+.prose pre {
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  overflow-x: auto;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.prose code:not(pre code) {
+  background: var(--bg-overlay);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 0.1em 0.35em;
+}
+
+.prose hr {
+  border: none;
+  border-top: 1px solid var(--line);
+  margin-block: 2.5em;
+}
+
+.prose strong {
+  color: var(--text);
+}
+
+.prose p, .prose li {
+  color: var(--muted);
+}
+
+.prose p:first-child {
+  color: var(--text);
+}

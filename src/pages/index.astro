@@ -1,0 +1,194 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import GardenNote from '../components/GardenNote.astro';
+
+const projects = (await getCollection('projects')).sort(
+  (a, b) => a.data.order - b.data.order
+);
+const featured = projects.filter((p) => p.data.featured);
+
+const notes = (await getCollection('garden'))
+  .sort((a, b) => b.data.tended.valueOf() - a.data.tended.valueOf())
+  .slice(0, 3);
+
+// TODO(briggs): fluff — tune this list to the tools you actually want to claim.
+const capabilities = [
+  {
+    name: 'Infrastructure as Code',
+    detail: 'NixOS modules and flakes, Terraform. Whole fleets defined in a repo, rebuilt from scratch without fear.',
+  },
+  {
+    name: 'CI/CD & Release Engineering',
+    detail: 'GitHub Actions pipelines that build, test, scan, and ship — including the site you are reading.',
+  },
+  {
+    name: 'Containers & Orchestration',
+    detail: 'OCI images built reproducibly, deployed to Kubernetes or kept honest on plain systemd.',
+  },
+  {
+    name: 'Observability',
+    detail: 'Prometheus, Grafana, and structured logs. If it pages at 3 a.m., it should explain itself.',
+  },
+  {
+    name: 'Security Engineering',
+    detail: 'Threat modeling, hardening baselines, and least-privilege design — security as architecture, not audit.',
+  },
+  {
+    name: 'Automation & Tooling',
+    detail: 'Go, Python, and shell where appropriate. Internal tools with the polish of products.',
+  },
+];
+---
+
+<Base
+  title="Briggs Bastian — Security & Systems Engineer"
+  description="Security-minded systems engineer in Seattle. Building resilient infrastructure, a NixOS-native RMM, and a souls-like PvP game."
+>
+  <section class="hero container">
+    <p class="kicker">Briggs Bastian — Seattle, WA</p>
+    <h1>Systems that hold<br />under <em>pressure</em>.</h1>
+    <p class="lede">
+      Security-minded systems engineer with a deep Linux background. I design
+      infrastructure that survives bad days, automate the boring parts out of
+      existence, and — after hours — build a souls-like where the netcode has
+      to be as honest as the combat.
+    </p>
+    <div class="hero-actions">
+      <a class="btn" href="/projects/">See the work</a>
+      <a class="btn ghost" href="/garden/">Wander the garden</a>
+    </div>
+  </section>
+
+  <section class="section container">
+    <div class="section-head">
+      <div>
+        <p class="kicker">01 / Now forging</p>
+        <h2>Selected work</h2>
+      </div>
+      <a class="more" href="/projects/">All projects</a>
+    </div>
+    <div class="grid">
+      {featured.map((project) => <ProjectCard project={project} />)}
+    </div>
+  </section>
+
+  <section class="section container">
+    <div class="section-head">
+      <div>
+        <p class="kicker">02 / Operations</p>
+        <h2>How I run things</h2>
+      </div>
+    </div>
+    <div class="caps">
+      {
+        capabilities.map((cap, i) => (
+          <div class="cap">
+            <span class="cap-index">{String(i + 1).padStart(2, '0')}</span>
+            <h3>{cap.name}</h3>
+            <p>{cap.detail}</p>
+          </div>
+        ))
+      }
+    </div>
+  </section>
+
+  <section class="section container">
+    <div class="section-head">
+      <div>
+        <p class="kicker">03 / Thought garden</p>
+        <h2>Recently tended</h2>
+      </div>
+      <a class="more" href="/garden/">Enter the garden</a>
+    </div>
+    <div data-accent="moss">
+      {notes.map((note) => <GardenNote note={note} />)}
+    </div>
+  </section>
+</Base>
+
+<style>
+  .hero {
+    padding-block: clamp(4rem, 10vw, 8rem);
+  }
+
+  .hero h1 {
+    font-size: clamp(3rem, 9vw, 6.5rem);
+    margin-block: 1.25rem 1.75rem;
+  }
+
+  .hero h1 em {
+    color: var(--accent);
+    font-style: italic;
+  }
+
+  .lede {
+    max-width: 38rem;
+    color: var(--muted);
+    font-size: 1.15rem;
+  }
+
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 2.5rem;
+  }
+
+  .btn {
+    font-family: var(--mono);
+    font-size: 0.8125rem;
+    letter-spacing: 0.05em;
+    text-decoration: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    background: var(--accent);
+    color: var(--bg);
+    transition: background 120ms ease, color 120ms ease;
+  }
+
+  .btn:hover {
+    background: var(--accent-bright);
+    color: var(--bg);
+  }
+
+  .btn.ghost {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--line-bright);
+  }
+
+  .btn.ghost:hover {
+    color: var(--accent-bright);
+    border-color: var(--accent);
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(20rem, 100%), 1fr));
+    gap: 1.25rem;
+  }
+
+  .caps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(18rem, 100%), 1fr));
+    gap: 2.5rem 3rem;
+  }
+
+  .cap-index {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--accent);
+  }
+
+  .cap h3 {
+    font-size: 1.45rem;
+    margin-block: 0.5rem;
+  }
+
+  .cap p {
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+</style>
