@@ -56,6 +56,38 @@ const incidents = [
   },
 ];
 
+// Reference architecture — MOCK until built. This is the SecDevOps
+// learning target: a small Linode fleet that makes every claim on this
+// page real. LEARNING_PATHWAY.md (repo root, untracked) maps each
+// component to a build phase. TODO(briggs): as phases complete, this
+// section stops being aspirational.
+const platform = [
+  {
+    name: 'Provisioning as code',
+    detail: 'OpenTofu drives the Linode API — instances, Cloud Firewalls, DNS, Object Storage. Infrastructure is a reviewed plan, never console clicks.',
+  },
+  {
+    name: 'NixOS on rented metal',
+    detail: 'Linode ships no NixOS image, so nixos-anywhere installs it over SSH. Every cloud node is a flake target: rebuilt, rolled back, and drift-checked like the homelab.',
+  },
+  {
+    name: 'Supply-chain discipline',
+    detail: 'CI builds containers, scans them, and pushes by digest — never :latest, never unscanned. The pipeline that deploys is the pipeline that gates.',
+  },
+  {
+    name: 'No standing credentials',
+    detail: 'Short-lived OIDC tokens where supported, tightly-scoped API tokens where not, and sops-encrypted secrets decrypted only on the target host.',
+  },
+  {
+    name: 'One mesh, no exceptions',
+    detail: 'WireGuard joins the Linode fleet to the homelab — cloud nodes are just more fleet. Management traffic never rides the public interface.',
+  },
+  {
+    name: 'Offsite backups that restore',
+    detail: 'restic ships NAS and cloud state to Linode Object Storage, encrypted client-side. The monthly restore test is what makes them backups instead of prayers.',
+  },
+];
+
 // Runbooks — replace with links into the homelab repo (docs/ rendered or
 // public excerpts). Title + trigger + first action is the legitimacy
 // signal; full content can stay private.
@@ -152,7 +184,34 @@ const runbooks = [
   </section>
 
   <section class="container block">
-    <div class="block-head" data-num="04"><p class="kicker">Runbooks</p></div>
+    <div class="block-head" data-num="04"><p class="kicker">Reference architecture</p></div>
+    <p class="blurb">
+      The cloud half of the estate: a deliberately small Linode fleet,
+      because SecDevOps is a set of habits, not a budget line. The pipeline
+      and the perimeter are the same design problem — so they're designed
+      together.
+    </p>
+    <ol class="pipeline platform">
+      {platform.map((item, i) => (
+        <li>
+          <span class="step-no">{String(i + 1).padStart(2, '0')}</span>
+          <div>
+            <h3>{item.name}</h3>
+            <p>{item.detail}</p>
+          </div>
+        </li>
+      ))}
+    </ol>
+    <p class="fleet-line">
+      fleet: <strong>edge</strong> — Nanode 1GB · Caddy, Gatus, WireGuard ·
+      <strong>forge</strong> — Linode 2GB · containers, game-server tests ·
+      <strong>object storage</strong> — encrypted offsite backups.
+      Total: the cost of two coffees a month.
+    </p>
+  </section>
+
+  <section class="container block">
+    <div class="block-head" data-num="05"><p class="kicker">Runbooks</p></div>
     <p class="blurb">
       If a failure mode is known, the response shouldn't be improvised.
       Runbooks live in the same repo as the configuration they describe —
@@ -242,6 +301,19 @@ const runbooks = [
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr));
     gap: 1.5rem;
+  }
+
+  .fleet-line {
+    margin-top: 1.75rem;
+    font-family: var(--mono);
+    font-size: 0.8125rem;
+    line-height: 2;
+    color: var(--faint);
+  }
+
+  .fleet-line strong {
+    color: var(--accent);
+    font-weight: 500;
   }
 
   .pipeline li {
