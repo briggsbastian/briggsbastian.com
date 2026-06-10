@@ -1,19 +1,118 @@
 ---
 /*
- * Interactive homelab topology: a force-directed dot-web graph in
- * ~150 lines of vanilla JS. No D3, no framework — the physics is three
- * forces (pair repulsion, edge springs, weak centering) integrated per
- * frame. Hover to focus, drag to rearrange. The media Proxmox host is
- * described generically on purpose — keep it that way.
+ * Auvik-style structured topology: a tiered tree (internet → gateway →
+ * switching → networks → devices) with elbow connectors, computed at
+ * build time — the only client JS is hover focus + the info panel.
+ * The media Proxmox host is described generically on purpose — keep it
+ * that way.
  */
+
+interface NodeDef {
+  id: string;
+  label: string;
+  c: string;
+  r: number;
+  blurb: string;
+  parent?: string;
+}
+
+const RAW: NodeDef[] = [
+  { id: 'internet', label: 'internet', c: 'none', r: 10, blurb: 'ISP uplink. Untrusted by definition — everything below it is policy.' },
+  { id: 'gateway', label: 'unifi gateway', c: 'ember', r: 13, parent: 'internet', blurb: 'UniFi gateway — routing, firewall rules, and the segmentation between trusted, IoT, and guest all live here.' },
+  { id: 'switch', label: 'unifi switching', c: 'none', r: 9, parent: 'gateway', blurb: 'UniFi switching fabric carrying the networks below.' },
+
+  { id: 'lan', label: 'trusted lan', c: 'moss', r: 10, parent: 'switch', blurb: 'The trusted network — where the fleet lives.' },
+  { id: 'iot', label: 'iot', c: 'brass', r: 10, parent: 'switch', blurb: 'Streaming and smart-home devices. They talk out, not sideways.' },
+  { id: 'guest', label: 'guest', c: 'frost', r: 10, parent: 'switch', blurb: 'UniFi guest network — visitors get internet and nothing else.' },
+
+  { id: 'pve-media', label: 'pve · media', c: 'iris', r: 8, parent: 'lan', blurb: 'Proxmox host running NixOS VMs for the media stack — acquisition through playback.' },
+  { id: 'pve-sec', label: 'pve · security', c: 'iris', r: 8, parent: 'lan', blurb: 'Proxmox host for the security VM deployment — where the day job’s instincts get a sandbox.' },
+  { id: 'pve-net', label: 'pve · netmgmt', c: 'iris', r: 8, parent: 'lan', blurb: 'Proxmox host for network management VMs — keeping the UniFi estate observable and honest.' },
+  { id: 'gaming', label: 'gaming rig', c: 'iris', r: 8, parent: 'lan', blurb: 'NixOS gaming desktop — proof the declarative life survives contact with GPU drivers.' },
+  { id: 'gameserver', label: 'game server', c: 'iris', r: 8, parent: 'lan', blurb: 'GNOME NixOS box hosting game servers — where Gesture’s dedicated builds will land.' },
+  { id: 'nas', label: 'nas · ubuntu', c: 'none', r: 8, parent: 'lan', blurb: 'Ubuntu 24.04 LTS NAS — bulk storage, and the one holdout from the NixOS takeover.' },
+  { id: 'tv1', label: 'tv', c: 'brass', r: 8, parent: 'iot', blurb: 'Smart TV — quarantined on the IoT network like the chatty appliance it is.' },
+  { id: 'tv2', label: 'tv', c: 'brass', r: 8, parent: 'iot', blurb: 'The other smart TV. Same quarantine, same reasons.' },
+  { id: 'homepod', label: 'homepod', c: 'brass', r: 8, parent: 'iot', blurb: 'Apple HomePod. It needs to hear "set a timer," not see the lan.' },
+  { id: 'guests', label: 'guest devices', c: 'frost', r: 8, parent: 'guest', blurb: 'Whatever friends bring over — captive, segregated, forgotten.' },
+];
+
+const W = 960;
+const TIER_Y = [46, 136, 226, 318, 446];
+
+const byId = new Map(RAW.map((n) => [n.id, n]));
+const children = new Map<string, NodeDef[]>();
+for (const n of RAW) {
+  if (n.parent) children.set(n.parent, [...(children.get(n.parent) ?? []), n]);
+}
+
+const tierOf = (n: NodeDef): number => (n.parent ? tierOf(byId.get(n.parent)!) + 1 : 0);
+
+// leaves evenly spaced; every parent centered over its children
+const leaves = RAW.filter((n) => !children.has(n.id));
+const X = new Map<string, number>();
+const margin = 72;
+leaves.forEach((n, i) => X.set(n.id, margin + (i * (W - margin * 2)) / (leaves.length - 1)));
+for (const n of [...RAW].sort((a, b) => tierOf(b) - tierOf(a))) {
+  if (children.has(n.id)) {
+    const kids = children.get(n.id)!;
+    X.set(n.id, kids.reduce((sum, k) => sum + X.get(k.id)!, 0) / kids.length);
+  }
+}
+
+const nodes = RAW.map((n, i) => ({
+  ...n,
+  tier: tierOf(n),
+  x: X.get(n.id)!,
+  y: TIER_Y[tierOf(n)]!,
+  // bottom-tier labels alternate depth to avoid collisions
+  labelDy: tierOf(n) === 4 && i % 2 ? 32 : 18,
+}));
+
+const edges = nodes
+  .filter((n) => n.parent)
+  .map((n) => {
+    const p = nodes.find((m) => m.id === n.parent)!;
+    const midY = (p.y + n.y) / 2;
+    return {
+      child: n,
+      d: `M ${p.x} ${p.y + p.r} L ${p.x} ${midY} L ${n.x} ${midY} L ${n.x} ${n.y - n.r}`,
+    };
+  });
 ---
 
 <figure class="topo">
-  <svg id="topo-svg" viewBox="0 0 860 540" aria-label="Interactive homelab network topology graph">
-    <g id="topo-edges"></g>
-    <g id="topo-nodes"></g>
+  <svg id="topo-svg" viewBox={`0 0 ${W} 520`} aria-label="Homelab network topology — tiered map from internet to devices">
+    <g>
+      {edges.map((e) => (
+        <path
+          class={`edge c-${e.child.c}`}
+          d={e.d}
+          data-edge={e.child.id}
+          style={`--t: ${e.child.tier}`}
+        />
+      ))}
+    </g>
+    <g>
+      {nodes.map((n) => (
+        <g
+          class={`node c-${n.c}`}
+          transform={`translate(${n.x} ${n.y})`}
+          data-id={n.id}
+          data-parent={n.parent}
+          data-label={n.label}
+          data-blurb={n.blurb}
+          style={`--t: ${n.tier}`}
+        >
+          <circle class="hit" r={n.r + 13} />
+          <circle class="dot" r={n.r} />
+          {n.id !== 'internet' && <circle class="up" cx={n.r * 0.8} cy={-n.r * 0.8} r="2.6" />}
+          <text y={n.r + n.labelDy}>{n.label}</text>
+        </g>
+      ))}
+    </g>
   </svg>
-  <figcaption id="topo-info">Hover or drag a node to explore the fleet.</figcaption>
+  <figcaption id="topo-info">Hover a node to inspect it. Green ticks are online status.</figcaption>
 </figure>
 
 <style is:global>
@@ -28,47 +127,7 @@
     background: var(--bg-raised);
     border: 1px solid var(--line);
     border-radius: 12px;
-    touch-action: none;
     user-select: none;
-  }
-
-  #topo-svg .edge {
-    stroke: var(--line-bright);
-    stroke-width: 1.2;
-    transition: opacity 150ms ease, stroke 150ms ease;
-  }
-
-  #topo-svg .edge.dash {
-    stroke: var(--faint);
-    stroke-dasharray: 3 6;
-    opacity: 0.6;
-  }
-
-  #topo-svg .node {
-    cursor: grab;
-  }
-
-  #topo-svg .node:active {
-    cursor: grabbing;
-  }
-
-  #topo-svg .node .hit {
-    fill: transparent;
-  }
-
-  #topo-svg .node .dot {
-    fill: color-mix(in srgb, var(--nc) 22%, var(--bg));
-    stroke: var(--nc);
-    stroke-width: 1.5;
-    transition: fill 150ms ease;
-  }
-
-  #topo-svg .node text {
-    font-family: var(--mono);
-    font-size: 11px;
-    fill: var(--muted);
-    text-anchor: middle;
-    pointer-events: none;
   }
 
   #topo-svg .c-ember { --nc: var(--ember); }
@@ -78,9 +137,69 @@
   #topo-svg .c-brass { --nc: var(--brass); }
   #topo-svg .c-none  { --nc: var(--faint); }
 
-  /* Focus mode: dim everything that isn't the hovered node's neighborhood */
+  #topo-svg .edge {
+    fill: none;
+    stroke: color-mix(in srgb, var(--nc) 32%, var(--line));
+    stroke-width: 1.3;
+    stroke-dasharray: 600;
+    stroke-dashoffset: 600;
+    animation: topo-draw 700ms ease forwards;
+    animation-delay: calc(var(--t) * 150ms);
+    transition: opacity 150ms ease, stroke 150ms ease;
+  }
+
+  #topo-svg .node {
+    cursor: pointer;
+    opacity: 0;
+    animation: topo-pop 500ms ease forwards;
+    animation-delay: calc(var(--t) * 150ms);
+    transition: opacity 150ms ease;
+  }
+
+  @keyframes topo-draw {
+    to { stroke-dashoffset: 0; }
+  }
+
+  @keyframes topo-pop {
+    to { opacity: 1; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #topo-svg .edge,
+    #topo-svg .node {
+      animation: none;
+      opacity: 1;
+      stroke-dashoffset: 0;
+    }
+  }
+
+  #topo-svg .hit {
+    fill: transparent;
+  }
+
+  #topo-svg .dot {
+    fill: color-mix(in srgb, var(--nc) 22%, var(--bg));
+    stroke: var(--nc);
+    stroke-width: 1.5;
+    transition: fill 150ms ease;
+  }
+
+  #topo-svg .up {
+    fill: var(--moss);
+    filter: drop-shadow(0 0 3px var(--moss));
+  }
+
+  #topo-svg text {
+    font-family: var(--mono);
+    font-size: 11px;
+    fill: var(--muted);
+    text-anchor: middle;
+    pointer-events: none;
+  }
+
+  /* Focus mode: dim everything outside the hovered node's path */
   #topo-svg.focused .node:not(.hl) {
-    opacity: 0.25;
+    opacity: 0.22;
   }
 
   #topo-svg.focused .edge:not(.hl) {
@@ -89,7 +208,6 @@
 
   #topo-svg .edge.hl {
     stroke: var(--accent);
-    opacity: 1;
   }
 
   #topo-svg .node.hl .dot {
@@ -116,210 +234,49 @@
 </style>
 
 <script>
-  interface Def {
-    id: string;
-    label: string;
-    r: number;
-    c: string;
-    blurb: string;
-  }
-
-  const DEFS: Def[] = [
-    { id: 'internet', label: 'internet', r: 11, c: 'none', blurb: 'ISP uplink. Untrusted by definition — everything below it is policy.' },
-    { id: 'gateway', label: 'unifi gateway', r: 14, c: 'ember', blurb: 'UniFi gateway — routing, firewall rules, and the segmentation between trusted, IoT, and guest all live here.' },
-    { id: 'switch', label: 'unifi switching', r: 9, c: 'none', blurb: 'UniFi switching fabric carrying the networks below.' },
-    { id: 'lan', label: 'trusted lan', r: 11, c: 'moss', blurb: 'The trusted network — where the fleet lives.' },
-    { id: 'iot', label: 'iot', r: 11, c: 'brass', blurb: 'Streaming and smart-home devices. They talk out, not sideways.' },
-    { id: 'guest', label: 'guest', r: 11, c: 'frost', blurb: 'UniFi guest network — visitors get internet and nothing else.' },
-    { id: 'pve-media', label: 'pve · media', r: 9, c: 'iris', blurb: 'Proxmox host running NixOS VMs for the media stack — acquisition through playback.' },
-    { id: 'pve-sec', label: 'pve · security', r: 9, c: 'iris', blurb: 'Proxmox host for the security VM deployment — where the day job’s instincts get a sandbox.' },
-    { id: 'pve-net', label: 'pve · netmgmt', r: 9, c: 'iris', blurb: 'Proxmox host for network management VMs — keeping the UniFi estate observable and honest.' },
-    { id: 'gaming', label: 'gaming rig', r: 9, c: 'iris', blurb: 'NixOS gaming desktop — proof the declarative life survives contact with GPU drivers.' },
-    { id: 'gameserver', label: 'game server', r: 9, c: 'iris', blurb: 'GNOME NixOS box hosting game servers — where Gesture’s dedicated builds will land.' },
-    { id: 'nas', label: 'nas · ubuntu', r: 9, c: 'none', blurb: 'Ubuntu 24.04 LTS NAS — bulk storage, and the one holdout from the NixOS takeover.' },
-    { id: 'tv1', label: 'tv', r: 7, c: 'brass', blurb: 'Smart TV — quarantined on the IoT network like the chatty appliance it is.' },
-    { id: 'tv2', label: 'tv', r: 7, c: 'brass', blurb: 'The other smart TV. Same quarantine, same reasons.' },
-    { id: 'homepod', label: 'homepod', r: 7, c: 'brass', blurb: 'Apple HomePod. It needs to hear "set a timer," not see the lan.' },
-    { id: 'guests', label: 'guest devices', r: 7, c: 'frost', blurb: 'Whatever friends bring over — captive, segregated, forgotten.' },
-  ];
-
-  const EDGES: { a: string; b: string; dash?: boolean }[] = [
-    { a: 'internet', b: 'gateway' },
-    { a: 'gateway', b: 'switch' },
-    { a: 'switch', b: 'lan' },
-    { a: 'switch', b: 'iot' },
-    { a: 'switch', b: 'guest' },
-    { a: 'lan', b: 'pve-media' },
-    { a: 'lan', b: 'pve-sec' },
-    { a: 'lan', b: 'pve-net' },
-    { a: 'lan', b: 'gaming' },
-    { a: 'lan', b: 'gameserver' },
-    { a: 'lan', b: 'nas' },
-    { a: 'iot', b: 'tv1' },
-    { a: 'iot', b: 'tv2' },
-    { a: 'iot', b: 'homepod' },
-    { a: 'guest', b: 'guests' },
-  ];
-
-  const W = 860;
-  const H = 540;
-  const NS = 'http://www.w3.org/2000/svg';
-
   const svg = document.querySelector<SVGSVGElement>('#topo-svg');
-  const edgeLayer = document.querySelector<SVGGElement>('#topo-edges');
-  const nodeLayer = document.querySelector<SVGGElement>('#topo-nodes');
   const info = document.querySelector<HTMLElement>('#topo-info');
 
-  if (svg && edgeLayer && nodeLayer && info) {
-    const nodes = DEFS.map((d, i) => ({
-      ...d,
-      x: W / 2 + 190 * Math.cos(i * 2.39996),
-      y: H / 2 + 130 * Math.sin(i * 2.39996),
-      vx: 0,
-      vy: 0,
-      el: document.createElementNS(NS, 'g'),
-    }));
-    type Node = (typeof nodes)[number];
-    const byId = new Map(nodes.map((n) => [n.id, n]));
+  if (svg && info) {
+    const nodeEls = [...svg.querySelectorAll<SVGGElement>('.node')];
+    const edgeEls = [...svg.querySelectorAll<SVGPathElement>('.edge')];
+    const parentOf = new Map(nodeEls.map((el) => [el.dataset.id!, el.dataset.parent]));
 
-    const links = EDGES.map((e) => ({
-      s: byId.get(e.a)!,
-      t: byId.get(e.b)!,
-      dash: !!e.dash,
-      el: document.createElementNS(NS, 'line'),
-    }));
-
-    const neighbors = new Map<string, Set<string>>(nodes.map((n) => [n.id, new Set([n.id])]));
-    for (const l of links) {
-      neighbors.get(l.s.id)!.add(l.t.id);
-      neighbors.get(l.t.id)!.add(l.s.id);
+    function related(id: string) {
+      const set = new Set([id]);
+      // ancestors
+      let cur = parentOf.get(id);
+      while (cur) {
+        set.add(cur);
+        cur = parentOf.get(cur);
+      }
+      // descendants (children reference parents, so sweep until stable)
+      let grew = true;
+      while (grew) {
+        grew = false;
+        for (const [child, parent] of parentOf) {
+          if (parent && set.has(parent) && !set.has(child)) {
+            set.add(child);
+            grew = true;
+          }
+        }
+      }
+      return set;
     }
 
-    for (const l of links) {
-      l.el.setAttribute('class', l.dash ? 'edge dash' : 'edge');
-      edgeLayer.appendChild(l.el);
-    }
-
-    for (const n of nodes) {
-      n.el.setAttribute('class', `node c-${n.c}`);
-      const hit = document.createElementNS(NS, 'circle');
-      hit.setAttribute('class', 'hit');
-      hit.setAttribute('r', String(n.r + 12));
-      const dot = document.createElementNS(NS, 'circle');
-      dot.setAttribute('class', 'dot');
-      dot.setAttribute('r', String(n.r));
-      const label = document.createElementNS(NS, 'text');
-      label.setAttribute('y', String(n.r + 16));
-      label.textContent = n.label;
-      n.el.append(hit, dot, label);
-      nodeLayer.appendChild(n.el);
-      n.el.addEventListener('pointerenter', () => focus(n));
-      n.el.addEventListener('pointerdown', (e) => {
-        e.preventDefault();
-        drag = n;
-        svg.setPointerCapture(e.pointerId);
-        focus(n);
-        wake();
+    for (const el of nodeEls) {
+      el.addEventListener('pointerenter', () => {
+        const set = related(el.dataset.id!);
+        svg.classList.add('focused');
+        for (const n of nodeEls) n.classList.toggle('hl', set.has(n.dataset.id!));
+        for (const e of edgeEls) e.classList.toggle('hl', set.has(e.dataset.edge!));
+        info.replaceChildren();
+        const name = document.createElement('strong');
+        name.textContent = el.dataset.label!;
+        info.append(name, ` — ${el.dataset.blurb!}`);
       });
     }
 
-    function focus(n: Node) {
-      const hood = neighbors.get(n.id)!;
-      svg!.classList.add('focused');
-      for (const m of nodes) m.el.classList.toggle('hl', hood.has(m.id));
-      for (const l of links) l.el.classList.toggle('hl', l.s.id === n.id || l.t.id === n.id);
-      info!.replaceChildren();
-      const name = document.createElement('strong');
-      name.textContent = n.label;
-      info!.append(name, ` — ${n.blurb}`);
-    }
-
     svg.addEventListener('pointerleave', () => svg.classList.remove('focused'));
-
-    let drag: Node | null = null;
-
-    function toSvg(e: PointerEvent) {
-      return new DOMPoint(e.clientX, e.clientY).matrixTransform(svg!.getScreenCTM()!.inverse());
-    }
-
-    svg.addEventListener('pointermove', (e) => {
-      if (!drag) return;
-      const p = toSvg(e);
-      drag.x = Math.max(30, Math.min(W - 30, p.x));
-      drag.y = Math.max(26, Math.min(H - 40, p.y));
-      drag.vx = 0;
-      drag.vy = 0;
-      wake();
-    });
-    svg.addEventListener('pointerup', () => (drag = null));
-    svg.addEventListener('pointercancel', () => (drag = null));
-
-    function step() {
-      // pair repulsion
-      for (let i = 0; i < nodes.length; i++) {
-        for (let j = i + 1; j < nodes.length; j++) {
-          const a = nodes[i]!, b = nodes[j]!;
-          const dx = a.x - b.x, dy = a.y - b.y;
-          const d2 = Math.max(dx * dx + dy * dy, 64);
-          const f = 3200 / d2;
-          const d = Math.sqrt(d2);
-          const fx = (dx / d) * f, fy = (dy / d) * f;
-          a.vx += fx; a.vy += fy;
-          b.vx -= fx; b.vy -= fy;
-        }
-      }
-      // edge springs (physical links only — scrapes are visual)
-      for (const l of links) {
-        if (l.dash) continue;
-        const dx = l.t.x - l.s.x, dy = l.t.y - l.s.y;
-        const d = Math.max(Math.hypot(dx, dy), 1);
-        const f = 0.04 * (d - 95);
-        const fx = (dx / d) * f, fy = (dy / d) * f;
-        l.s.vx += fx; l.s.vy += fy;
-        l.t.vx -= fx; l.t.vy -= fy;
-      }
-      // weak centering + integration
-      let maxV = 0;
-      for (const n of nodes) {
-        if (n === drag) continue;
-        n.vx = (n.vx + (W / 2 - n.x) * 0.004) * 0.82;
-        n.vy = (n.vy + (H / 2 - n.y) * 0.004) * 0.82;
-        const v = Math.hypot(n.vx, n.vy);
-        if (v > 4) { n.vx *= 4 / v; n.vy *= 4 / v; }
-        n.x = Math.max(30, Math.min(W - 30, n.x + n.vx));
-        n.y = Math.max(26, Math.min(H - 40, n.y + n.vy));
-        maxV = Math.max(maxV, Math.hypot(n.vx, n.vy));
-      }
-      return maxV;
-    }
-
-    function draw() {
-      for (const l of links) {
-        l.el.setAttribute('x1', String(l.s.x));
-        l.el.setAttribute('y1', String(l.s.y));
-        l.el.setAttribute('x2', String(l.t.x));
-        l.el.setAttribute('y2', String(l.t.y));
-      }
-      for (const n of nodes) {
-        n.el.setAttribute('transform', `translate(${n.x} ${n.y})`);
-      }
-    }
-
-    let raf = 0;
-    function loop() {
-      const maxV = step();
-      draw();
-      raf = maxV > 0.02 || drag ? requestAnimationFrame(loop) : 0;
-    }
-    function wake() {
-      if (!raf) raf = requestAnimationFrame(loop);
-    }
-
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      for (let i = 0; i < 600; i++) step();
-      draw();
-    } else {
-      wake();
-    }
   }
 </script>
