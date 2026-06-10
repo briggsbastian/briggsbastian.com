@@ -1,35 +1,35 @@
-/* ── Midnight Observatory ────────────────────────────────────────
-   Deep blue-black, cool starlight text, editorial serif display
-   type. One accent color per section via [data-accent]: ember
-   (home), iris (projects), moss (garden), frost (resume), brass
-   (ops). The accent slots keep their names; the hues are tuned
-   cool to sit on the midnight ground.
+/* ── Midnight Observatory (full-strength) ────────────────────────
+   An actual night sky, not a tinted black: navy gradient ground,
+   aurora glow that recolors per section, glass surfaces, gradient
+   ink on display type. One accent per section via [data-accent]:
+   ember (home), iris (projects), moss (garden), frost (resume),
+   brass (ops).
    ──────────────────────────────────────────────────────────────── */
 
 :root {
   --color-scheme: dark;
 
-  --bg: #0a0d13;
-  --bg-raised: #10141c;
-  --bg-overlay: #161b25;
-  --line: #1d2330;
-  --line-bright: #2c3547;
+  --bg: #0a0e18;
+  --bg-raised: rgba(255, 255, 255, 0.035);
+  --bg-overlay: rgba(255, 255, 255, 0.06);
+  --line: rgba(148, 170, 215, 0.14);
+  --line-bright: rgba(148, 170, 215, 0.3);
 
-  --text: #e3e8f0;
-  --muted: #97a1b3;
-  --faint: #626c7e;
+  --text: #e6ebf5;
+  --muted: #9aa7c2;
+  --faint: #67748f;
 
-  --ember: #f5a83c;
-  --ember-bright: #ffc46b;
-  --iris: #9d8cff;
-  --iris-bright: #bcaeff;
-  --moss: #6fd49a;
-  --moss-bright: #93e6b6;
-  --frost: #6cb8f0;
-  --frost-bright: #97d0fa;
-  --brass: #e0c25e;
-  --brass-bright: #f0d88a;
-  --glow-pct: 12%;
+  --ember: #ffac42;
+  --ember-bright: #ffc878;
+  --iris: #a48aff;
+  --iris-bright: #c0adff;
+  --moss: #5fe0a0;
+  --moss-bright: #8df0bf;
+  --frost: #62c1ff;
+  --frost-bright: #93d7ff;
+  --brass: #ffd166;
+  --brass-bright: #ffe199;
+  --glow-pct: 16%;
 
   --serif: 'Instrument Serif', Georgia, 'Times New Roman', serif;
   --sans: 'Inter Variable', system-ui, -apple-system, sans-serif;
@@ -87,14 +87,16 @@ html {
 }
 
 body {
-  background: var(--bg);
+  background-color: var(--bg);
   color: var(--text);
   font-family: var(--sans);
   font-size: 1.0625rem;
   line-height: 1.65;
   -webkit-font-smoothing: antialiased;
-  /* faint vertical ember gradient at the very top of the page */
-  background-image: linear-gradient(180deg, var(--accent-glow), transparent 28rem);
+  /* night-sky ground: section-accent wash over a navy → deep fade */
+  background-image:
+    linear-gradient(180deg, var(--accent-glow), transparent 32rem),
+    linear-gradient(180deg, #101a30 0%, #0a0e18 46rem);
   background-repeat: no-repeat;
 }
 
@@ -109,6 +111,21 @@ h1, h2, h3 {
   line-height: 1.08;
   letter-spacing: -0.01em;
   text-wrap: balance;
+}
+
+/* Gradient ink on display headings: starlight fading into the
+   section's accent. Prose/inner headings stay solid for reading. */
+h1,
+.section-head h2,
+.footer-title {
+  background-image: linear-gradient(
+    135deg,
+    var(--text) 30%,
+    color-mix(in srgb, var(--accent) 80%, var(--text))
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 a {
@@ -136,12 +153,22 @@ code {
 
 /* Mono uppercase section label, e.g. "01 / SELECTED WORK" */
 .kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
   font-family: var(--mono);
   font-size: 0.75rem;
   font-weight: 500;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--accent);
+}
+
+.kicker::before {
+  content: '';
+  width: 1.5rem;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent));
 }
 
 .section {
@@ -175,13 +202,14 @@ code {
   color: var(--accent);
 }
 
-/* Pill tag for stacks/topics */
+/* Pill tag for stacks/topics — tinted by the section accent */
 .tag {
   font-family: var(--mono);
   font-size: 0.6875rem;
   letter-spacing: 0.06em;
-  color: var(--muted);
-  border: 1px solid var(--line-bright);
+  color: color-mix(in srgb, var(--accent) 55%, var(--text));
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
   border-radius: 999px;
   padding: 0.2rem 0.65rem;
   white-space: nowrap;

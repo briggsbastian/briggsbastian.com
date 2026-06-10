@@ -33,7 +33,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <meta name="generator" content={Astro.generator} />
   </head>
   <body>
-    <div class="sky" aria-hidden="true"></div>
+    <div class="sky" aria-hidden="true"><div class="aurora"></div></div>
     <header class="container">
       <nav>
         <a class="wordmark" href="/">Briggs<span>&nbsp;Bastian</span></a>
@@ -99,16 +99,52 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
 </html>
 
 <style>
-  /* Starfield: two layers of box-shadow "stars" in the page's upper
-     sky, fading out by ~520px. The second layer twinkles gently. */
+  /* Night sky: aurora glow + two layers of box-shadow "stars" in
+     the page's upper region. The second star layer twinkles. */
   .sky {
     position: absolute;
     inset: 0 0 auto 0;
-    height: 520px;
+    height: 640px;
     pointer-events: none;
     overflow: hidden;
     z-index: -1;
     mask-image: linear-gradient(180deg, #000 0%, #000 50%, transparent 100%);
+  }
+
+  /* Aurora: two blurred ribbons — the section accent plus a violet
+     counterpoint — drifting on a slow cycle. */
+  .aurora {
+    position: absolute;
+    inset: -25% -12% auto;
+    height: 130%;
+    background:
+      radial-gradient(
+        42% 48% at 76% 22%,
+        color-mix(in srgb, var(--accent) 22%, transparent),
+        transparent 70%
+      ),
+      radial-gradient(
+        36% 44% at 18% 38%,
+        color-mix(in srgb, var(--iris) 13%, transparent),
+        transparent 70%
+      );
+    filter: blur(52px);
+    animation: drift 26s ease-in-out infinite alternate;
+  }
+
+  @keyframes drift {
+    from {
+      transform: translate3d(-2.5%, -2%, 0) scale(1);
+    }
+    to {
+      transform: translate3d(2.5%, 4%, 0) scale(1.08);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .aurora {
+      animation: none;
+    }
   }
 
   .sky::before,
