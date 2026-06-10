@@ -8,8 +8,11 @@ featured: false
 order: 4
 ---
 
-<!-- TODO(briggs): the topology, hostnames, and VLAN scheme below are a
-     plausible mock — swap in your actual hosts and addressing. -->
+import TopologyGraph from '../../components/TopologyGraph.astro';
+
+{/* TODO(briggs): the topology, hostnames, and VLAN scheme are a plausible
+    mock — swap in your actual hosts and addressing (the graph data lives
+    in src/components/TopologyGraph.astro). */}
 
 Every host in the lab — routing, storage, builds, monitoring, game-server
 sandboxes — is defined in a single Nix flake. If a machine dies, recovery is
@@ -17,23 +20,7 @@ sandboxes — is defined in a single Nix flake. If a machine dies, recovery is
 
 ## Base topology
 
-```text
-                         ISP
-                          │
-                  ┌───────┴────────┐
-                  │    bonfire     │  NixOS router/firewall
-                  │ nftables · DNS │  WireGuard endpoint (only way in)
-                  └───────┬────────┘
-                          │ trunk
-                  ┌───────┴────────┐
-                  │  L2 switch     │  VLAN segmentation
-                  └─┬────┬────┬──┬─┘
-        ────────────┘    │    │  └─────────────
-        │                │    │               │
-   VLAN 10 mgmt     VLAN 20 lan   VLAN 30 lab    VLAN 40 iot
-   switch/IPMI      trusted       the fleet      untrusted, no
-   admin only       clients       (below)        east-west traffic
-```
+<TopologyGraph />
 
 The lab VLAN is where the fleet lives:
 

@@ -1,0 +1,325 @@
+---
+/*
+ * Interactive homelab topology: a force-directed dot-web graph in
+ * ~150 lines of vanilla JS. No D3, no framework — the physics is three
+ * forces (pair repulsion, edge springs, weak centering) integrated per
+ * frame. Solid edges are physical/VLAN links; dashed edges are
+ * watchtower's Prometheus scrapes. Hover to focus, drag to rearrange.
+ */
+---
+
+<figure class="topo">
+  <svg id="topo-svg" viewBox="0 0 860 540" aria-label="Interactive homelab network topology graph">
+    <g id="topo-edges"></g>
+    <g id="topo-nodes"></g>
+  </svg>
+  <figcaption id="topo-info">Hover or drag a node to explore the fleet. Dashed lines are monitoring scrapes.</figcaption>
+</figure>
+
+<style is:global>
+  .topo {
+    margin: 2rem 0;
+  }
+
+  #topo-svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    touch-action: none;
+    user-select: none;
+  }
+
+  #topo-svg .edge {
+    stroke: var(--line-bright);
+    stroke-width: 1.2;
+    transition: opacity 150ms ease, stroke 150ms ease;
+  }
+
+  #topo-svg .edge.dash {
+    stroke: var(--faint);
+    stroke-dasharray: 3 6;
+    opacity: 0.6;
+  }
+
+  #topo-svg .node {
+    cursor: grab;
+  }
+
+  #topo-svg .node:active {
+    cursor: grabbing;
+  }
+
+  #topo-svg .node .hit {
+    fill: transparent;
+  }
+
+  #topo-svg .node .dot {
+    fill: color-mix(in srgb, var(--nc) 22%, var(--bg));
+    stroke: var(--nc);
+    stroke-width: 1.5;
+    transition: fill 150ms ease;
+  }
+
+  #topo-svg .node text {
+    font-family: var(--mono);
+    font-size: 11px;
+    fill: var(--muted);
+    text-anchor: middle;
+    pointer-events: none;
+  }
+
+  #topo-svg .c-ember { --nc: #ff8a3d; }
+  #topo-svg .c-iris  { --nc: #ab8df5; }
+  #topo-svg .c-moss  { --nc: #a8c686; }
+  #topo-svg .c-frost { --nc: #7fb4e0; }
+  #topo-svg .c-brass { --nc: #d9b257; }
+  #topo-svg .c-none  { --nc: #8a8171; }
+
+  /* Focus mode: dim everything that isn't the hovered node's neighborhood */
+  #topo-svg.focused .node:not(.hl) {
+    opacity: 0.25;
+  }
+
+  #topo-svg.focused .edge:not(.hl) {
+    opacity: 0.12;
+  }
+
+  #topo-svg .edge.hl {
+    stroke: var(--accent);
+    opacity: 1;
+  }
+
+  #topo-svg .node.hl .dot {
+    fill: color-mix(in srgb, var(--nc) 45%, var(--bg));
+    filter: drop-shadow(0 0 6px var(--nc));
+  }
+
+  #topo-svg .node.hl text {
+    fill: var(--text);
+  }
+
+  #topo-info {
+    min-height: 3.25rem;
+    padding: 0.85rem 0.25rem 0;
+    font-size: 0.9rem;
+    color: var(--muted);
+  }
+
+  #topo-info strong {
+    font-family: var(--mono);
+    font-size: 0.85em;
+    color: var(--accent);
+  }
+</style>
+
+<script>
+  interface Def {
+    id: string;
+    label: string;
+    r: number;
+    c: string;
+    blurb: string;
+  }
+
+  const DEFS: Def[] = [
+    { id: 'internet', label: 'internet', r: 11, c: 'none', blurb: 'ISP uplink. Untrusted by definition — the only thing it can reach is bonfire.' },
+    { id: 'bonfire', label: 'bonfire', r: 14, c: 'ember', blurb: 'NixOS router and firewall — nftables, DNS, WireGuard concentrator. The only door into the network.' },
+    { id: 'switch', label: 'switch', r: 9, c: 'none', blurb: 'L2 switch carrying the VLAN trunk. Segmentation policy is enforced upstream at bonfire.' },
+    { id: 'mgmt', label: 'vlan10 · mgmt', r: 11, c: 'frost', blurb: 'Management plane — switch UI and out-of-band consoles. Reachable from nowhere but itself.' },
+    { id: 'lan', label: 'vlan20 · lan', r: 11, c: 'moss', blurb: 'Trusted clients. Can reach lab services, never lab management.' },
+    { id: 'lab', label: 'vlan30 · lab', r: 11, c: 'iris', blurb: 'The fleet lives here. Accepts management traffic only from the mgmt VLAN.' },
+    { id: 'iot', label: 'vlan40 · iot', r: 11, c: 'brass', blurb: 'Untrusted devices. Internet egress only — zero east-west traffic, enforced in nftables.' },
+    { id: 'ipmi', label: 'ipmi', r: 7, c: 'frost', blurb: 'Out-of-band consoles for the fleet — the break-glass path when a host goes dark.' },
+    { id: 'clients', label: 'clients', r: 7, c: 'moss', blurb: 'Workstations and laptops on the trusted side of the house.' },
+    { id: 'devices', label: 'iot devices', r: 7, c: 'brass', blurb: 'Lightbulbs that want to talk to three continents. They get exactly one route: out.' },
+    { id: 'vault', label: 'vault', r: 9, c: 'iris', blurb: 'ZFS storage — backups, media, build artifacts. Snapshots ship offsite nightly.' },
+    { id: 'forge', label: 'forge', r: 9, c: 'iris', blurb: 'Build host — Nix remote builder, CI runners, OCI registry.' },
+    { id: 'watchtower', label: 'watchtower', r: 9, c: 'iris', blurb: 'Prometheus, Grafana, Alertmanager. The dashed lines are its scrapes — it watches everything.' },
+    { id: 'arena', label: 'arena', r: 9, c: 'iris', blurb: 'Game-server sandbox — where Gesture dedicated builds prove themselves before anyone else suffers them.' },
+  ];
+
+  const EDGES: { a: string; b: string; dash?: boolean }[] = [
+    { a: 'internet', b: 'bonfire' },
+    { a: 'bonfire', b: 'switch' },
+    { a: 'switch', b: 'mgmt' },
+    { a: 'switch', b: 'lan' },
+    { a: 'switch', b: 'lab' },
+    { a: 'switch', b: 'iot' },
+    { a: 'mgmt', b: 'ipmi' },
+    { a: 'lan', b: 'clients' },
+    { a: 'iot', b: 'devices' },
+    { a: 'lab', b: 'vault' },
+    { a: 'lab', b: 'forge' },
+    { a: 'lab', b: 'watchtower' },
+    { a: 'lab', b: 'arena' },
+    { a: 'watchtower', b: 'bonfire', dash: true },
+    { a: 'watchtower', b: 'vault', dash: true },
+    { a: 'watchtower', b: 'forge', dash: true },
+    { a: 'watchtower', b: 'arena', dash: true },
+  ];
+
+  const W = 860;
+  const H = 540;
+  const NS = 'http://www.w3.org/2000/svg';
+
+  const svg = document.querySelector<SVGSVGElement>('#topo-svg');
+  const edgeLayer = document.querySelector<SVGGElement>('#topo-edges');
+  const nodeLayer = document.querySelector<SVGGElement>('#topo-nodes');
+  const info = document.querySelector<HTMLElement>('#topo-info');
+
+  if (svg && edgeLayer && nodeLayer && info) {
+    const nodes = DEFS.map((d, i) => ({
+      ...d,
+      x: W / 2 + 190 * Math.cos(i * 2.39996),
+      y: H / 2 + 130 * Math.sin(i * 2.39996),
+      vx: 0,
+      vy: 0,
+      el: document.createElementNS(NS, 'g'),
+    }));
+    type Node = (typeof nodes)[number];
+    const byId = new Map(nodes.map((n) => [n.id, n]));
+
+    const links = EDGES.map((e) => ({
+      s: byId.get(e.a)!,
+      t: byId.get(e.b)!,
+      dash: !!e.dash,
+      el: document.createElementNS(NS, 'line'),
+    }));
+
+    const neighbors = new Map<string, Set<string>>(nodes.map((n) => [n.id, new Set([n.id])]));
+    for (const l of links) {
+      neighbors.get(l.s.id)!.add(l.t.id);
+      neighbors.get(l.t.id)!.add(l.s.id);
+    }
+
+    for (const l of links) {
+      l.el.setAttribute('class', l.dash ? 'edge dash' : 'edge');
+      edgeLayer.appendChild(l.el);
+    }
+
+    for (const n of nodes) {
+      n.el.setAttribute('class', `node c-${n.c}`);
+      const hit = document.createElementNS(NS, 'circle');
+      hit.setAttribute('class', 'hit');
+      hit.setAttribute('r', String(n.r + 12));
+      const dot = document.createElementNS(NS, 'circle');
+      dot.setAttribute('class', 'dot');
+      dot.setAttribute('r', String(n.r));
+      const label = document.createElementNS(NS, 'text');
+      label.setAttribute('y', String(n.r + 16));
+      label.textContent = n.label;
+      n.el.append(hit, dot, label);
+      nodeLayer.appendChild(n.el);
+      n.el.addEventListener('pointerenter', () => focus(n));
+      n.el.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        drag = n;
+        svg.setPointerCapture(e.pointerId);
+        focus(n);
+        wake();
+      });
+    }
+
+    function focus(n: Node) {
+      const hood = neighbors.get(n.id)!;
+      svg!.classList.add('focused');
+      for (const m of nodes) m.el.classList.toggle('hl', hood.has(m.id));
+      for (const l of links) l.el.classList.toggle('hl', l.s.id === n.id || l.t.id === n.id);
+      info!.replaceChildren();
+      const name = document.createElement('strong');
+      name.textContent = n.label;
+      info!.append(name, ` — ${n.blurb}`);
+    }
+
+    svg.addEventListener('pointerleave', () => svg.classList.remove('focused'));
+
+    let drag: Node | null = null;
+
+    function toSvg(e: PointerEvent) {
+      return new DOMPoint(e.clientX, e.clientY).matrixTransform(svg!.getScreenCTM()!.inverse());
+    }
+
+    svg.addEventListener('pointermove', (e) => {
+      if (!drag) return;
+      const p = toSvg(e);
+      drag.x = Math.max(30, Math.min(W - 30, p.x));
+      drag.y = Math.max(26, Math.min(H - 40, p.y));
+      drag.vx = 0;
+      drag.vy = 0;
+      wake();
+    });
+    svg.addEventListener('pointerup', () => (drag = null));
+    svg.addEventListener('pointercancel', () => (drag = null));
+
+    function step() {
+      // pair repulsion
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+          const a = nodes[i]!, b = nodes[j]!;
+          const dx = a.x - b.x, dy = a.y - b.y;
+          const d2 = Math.max(dx * dx + dy * dy, 64);
+          const f = 3200 / d2;
+          const d = Math.sqrt(d2);
+          const fx = (dx / d) * f, fy = (dy / d) * f;
+          a.vx += fx; a.vy += fy;
+          b.vx -= fx; b.vy -= fy;
+        }
+      }
+      // edge springs (physical links only — scrapes are visual)
+      for (const l of links) {
+        if (l.dash) continue;
+        const dx = l.t.x - l.s.x, dy = l.t.y - l.s.y;
+        const d = Math.max(Math.hypot(dx, dy), 1);
+        const f = 0.04 * (d - 95);
+        const fx = (dx / d) * f, fy = (dy / d) * f;
+        l.s.vx += fx; l.s.vy += fy;
+        l.t.vx -= fx; l.t.vy -= fy;
+      }
+      // weak centering + integration
+      let maxV = 0;
+      for (const n of nodes) {
+        if (n === drag) continue;
+        n.vx = (n.vx + (W / 2 - n.x) * 0.004) * 0.82;
+        n.vy = (n.vy + (H / 2 - n.y) * 0.004) * 0.82;
+        const v = Math.hypot(n.vx, n.vy);
+        if (v > 4) { n.vx *= 4 / v; n.vy *= 4 / v; }
+        n.x = Math.max(30, Math.min(W - 30, n.x + n.vx));
+        n.y = Math.max(26, Math.min(H - 40, n.y + n.vy));
+        maxV = Math.max(maxV, Math.hypot(n.vx, n.vy));
+      }
+      return maxV;
+    }
+
+    function draw() {
+      for (const l of links) {
+        l.el.setAttribute('x1', String(l.s.x));
+        l.el.setAttribute('y1', String(l.s.y));
+        l.el.setAttribute('x2', String(l.t.x));
+        l.el.setAttribute('y2', String(l.t.y));
+      }
+      for (const n of nodes) {
+        n.el.setAttribute('transform', `translate(${n.x} ${n.y})`);
+      }
+    }
+
+    let raf = 0;
+    function loop() {
+      const maxV = step();
+      draw();
+      raf = maxV > 0.02 || drag ? requestAnimationFrame(loop) : 0;
+    }
+    function wake() {
+      if (!raf) raf = requestAnimationFrame(loop);
+    }
+
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      for (let i = 0; i < 600; i++) step();
+      draw();
+    } else {
+      wake();
+    }
+  }
+</script>

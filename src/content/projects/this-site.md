@@ -19,8 +19,10 @@ this site is deliberately run like something that matters:
   `nix develop` on any machine yields the same Node, same everything. No
   "works on my laptop."
 - **Static by default.** Astro renders the whole site to plain HTML at
-  build time. No client-side framework runtime, no hydration, nothing to
-  exploit at the edge. It scores like a static site because it is one.
+  build time. No client-side framework runtime, no hydration — the only
+  JavaScript shipped is a ~150-line vanilla force simulation powering the
+  [homelab topology graph](/projects/homelab/). It scores like a static
+  site because it nearly is one.
 - **Pipeline as the front door.** Every push runs type checks and a full
   build in CI before anything ships. The same pipeline can emit a
   multi-stage Docker image (build in Node, serve from nginx) for
