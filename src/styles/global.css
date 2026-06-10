@@ -35,8 +35,9 @@
   --sans: 'Inter Variable', system-ui, -apple-system, sans-serif;
   --mono: 'JetBrains Mono Variable', ui-monospace, 'Cascadia Mono', monospace;
 
-  --content: 72rem;
-  --prose: 42rem;
+  /* tighter column + larger rem base = the density of ~150% zoom */
+  --content: 64rem;
+  --prose: 38rem;
 }
 
 /* ── Accent slot mapping ─────────────────────────────────────────
@@ -84,6 +85,23 @@
 html {
   color-scheme: var(--color-scheme, dark);
   scroll-behavior: smooth;
+  /* Desktop-first sizing: 18px rem base so the site reads at 100% the
+     way it used to at ~150% zoom. Everything rem-based scales with it. */
+  font-size: 112.5%;
+}
+
+/* phones keep the classic base — 18px is oversized at 22rem wide */
+@media (max-width: 40rem) {
+  html {
+    font-size: 100%;
+  }
+}
+
+/* big monitors get another step up instead of a sea of margin */
+@media (min-width: 120rem) {
+  html {
+    font-size: 125%;
+  }
 }
 
 body {
