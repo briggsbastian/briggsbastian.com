@@ -9,7 +9,9 @@ permissions:
   contents: read
 
 jobs:
+  # GitHub-only; Forgejo uses .forgejo/workflows/ci.yml, so skip when mirrored.
   build:
+    if: github.server_url == 'https://github.com'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -33,11 +35,9 @@ jobs:
           name: site
           path: dist/
 
-  # Deploys to GitHub Pages (works with the briggsbastian.com custom domain).
-  # Enable Pages with "GitHub Actions" as the source, or delete this job and
-  # wire the `site` artifact / Dockerfile into your host of choice.
+  # Deploys to GitHub Pages (enable Pages with "GitHub Actions" as the source).
   deploy:
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.server_url == 'https://github.com' && github.ref == 'refs/heads/main' && github.event_name == 'push'
     needs: build
     runs-on: ubuntu-latest
     permissions:

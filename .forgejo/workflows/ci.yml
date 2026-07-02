@@ -1,0 +1,26 @@
+# Runs on the self-hosted Forgejo runner (hacktop, nix label); Node from the flake.
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: nix
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: install
+        run: nix develop --command npm ci
+
+      - name: typecheck
+        run: nix develop --command npm run check
+
+      - name: build
+        run: nix develop --command npm run build
