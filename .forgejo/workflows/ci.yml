@@ -24,3 +24,44 @@ jobs:
 
       - name: build
         run: nix develop --command npm run build
+
+  # Secret scan on every push; the repo mirrors publicly, so a leaked key
+  # would be exposed the moment it lands.
+  gitleaks:
+    runs-on: nix
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history so gitleaks can scan commits
+      - name: gitleaks
+        run: nix run nixpkgs#gitleaks -- detect --source . --no-banner --redact
+
+  # Build the site as a Nix derivation — the exact store path cloud1's nginx
+  # serves. If this fails, the fleet flake can't consume the site either.
+  nix-build:
+    runs-on: nix
+    steps:
+      - uses: actions/checkout@v4
+      - name: nix build
+        run: nix build --print-build-logs .#default
+
+  # CI-gated publish to the public GitHub mirror: only after every gate is
+  # green, and only for main — the public repo can never show a red commit.
+  #
+  # Prereq: GitHub PAT (Contents: Read/Write on briggsbastian.com) as the
+  # Forgejo Actions secret GH_MIRROR_TOKEN (repo Settings → Actions → Secrets).
+  mirror:
+    needs: [build, gitleaks, nix-build]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: nix
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history + tags for a faithful mirror
+      - name: push to GitHub on green
+        env:
+          GH_MIRROR_TOKEN: ${{ secrets.GH_MIRROR_TOKEN }}
+        run: |
+          git push --force --follow-tags \
+            "https://x-access-token:${GH_MIRROR_TOKEN}@github.com/briggsbastian/briggsbastian.com.git" \
+            HEAD:refs/heads/main
