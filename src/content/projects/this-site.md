@@ -1,9 +1,9 @@
 ---
 title: 'briggsbastian.com'
-summary: 'This site, treated as a production system: Astro static build, Nix flake package, a gated CI pipeline on my own Forgejo, and nginx on my own NixOS cloud host serving it.'
+summary: 'This site, treated as a production system: Astro static build, Nix flake package, a gated CI pipeline on my own Forgejo, and a publish-on-green mirror feeding GitHub Pages.'
 status: 'active'
 year: '2026'
-stack: ['Astro', 'Nix Flakes', 'Forgejo Actions', 'NixOS + nginx']
+stack: ['Astro', 'Nix Flakes', 'Forgejo Actions', 'GitHub Pages']
 featured: true
 order: 3
 links:
@@ -28,11 +28,12 @@ like something that matters:
   job publish to the public GitHub repo — a red commit never leaves the
   house. (A Dockerfile can still emit a multi-stage nginx image for
   container hosting elsewhere.)
-- **Served from my own fleet.** The site is a Nix package
-  (`nix build .#default`); my [fleet flake](/projects/homelab/) consumes it
-  as an input and nginx on `cloud1`, the Linode NixOS host, serves the
-  store path under a Let's Encrypt cert. A deploy is an atomic generation
-  switch, and a rollback is just the previous generation.
+- **A reproducible artifact, hosted for free.** The site is also a Nix
+  package (`nix build .#default`), proven by CI on every push, so any box
+  with Nix can serve the identical bytes. Production is GitHub Pages fed
+  by the gated mirror — zero hosting cost — and because the artifact is a
+  derivation, moving it onto my own [fleet](/projects/homelab/) is a
+  config change, not a migration.
 - **Content as data.** Projects and garden notes are markdown with typed,
   schema-validated frontmatter. Bad metadata fails the build instead of
   shipping silently.

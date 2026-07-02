@@ -23,8 +23,8 @@ const experience = [
     title: 'Infrastructure & SecDevOps Engineering',
     dates: '2020 – Present',
     bullets: [
-      'Design and operate a hybrid estate: six NixOS hosts (five on-prem on UniFi, one Linode cloud node) plus an Ubuntu NAS, all described in a single Nix flake as one source of truth and deployed fleet-wide with one `colmena apply`. Adding a host takes a new directory and one line.',
-      'Keep provisioning separate from configuration: Terraform stands up the cloud instance and its Cloud Firewall, nixos-anywhere + disko handle greenfield installs, and Nix owns everything inside the box, reproducible and drift-free.',
+      'Design and operate a NixOS estate: five hosts on UniFi plus an Ubuntu NAS, all described in a single Nix flake as one source of truth and deployed fleet-wide with one `colmena apply`. Adding a host takes a new directory and one line.',
+      'Keep provisioning separate from configuration: Terraform stood up an off-site Linode leg and its Cloud Firewall, nixos-anywhere + disko handled the greenfield install, and Nix owned everything inside the box. The leg is decommissioned; the code that rebuilds it is one apply away.',
       'Built a gated CI/CD pipeline on a self-hosted Forgejo Actions runner: nix flake check → gitleaks secret scan → matrix build of every host against a self-hosted Harmonia binary cache → a publish-on-green job that mirrors to a public GitHub repo only after all gates pass.',
       'Designed a least-privilege deploy trust model, a scoped `deploy` user that can re-activate a build but never open a root shell, with sops-nix secrets keyed to each host’s SSH host key (no key distribution, no plaintext in the store).',
       'Stood up a private PKI with step-ca: an internal CA issuing auto-renewing mTLS certs to ~15 services over its own ACME endpoint, packaged as a reusable NixOS module any host opts into.',

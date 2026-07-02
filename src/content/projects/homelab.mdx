@@ -1,6 +1,6 @@
 ---
 title: 'The Homelab'
-summary: 'A UniFi network running a NixOS fleet from one flake: workstation, services host, media, a libvirt security lab, and a staging/CI box, plus an off-site Linode node, all deployed with a single colmena apply. One Ubuntu NAS stays off NixOS on purpose.'
+summary: 'A UniFi network running a NixOS fleet from one flake: workstation, services host, media, a libvirt security lab, and a staging/CI box, all deployed with a single colmena apply. One Ubuntu NAS stays off NixOS on purpose.'
 status: 'active'
 year: 'ongoing'
 stack: ['NixOS', 'Colmena', 'sops-nix', 'Terraform', 'libvirt', 'UniFi']
@@ -58,15 +58,17 @@ so a stolen deploy key can re-activate a build but can't open a root shell.
 
 ## Off-site, same flake
 
-The estate doesn't stop at the house. `cloud1` is a Linode node,
+The estate hasn't always stopped at the house. `cloud1` was a Linode node,
 Terraform-provisioned and installed greenfield with **nixos-anywhere**, then
-folded into the same flake and Colmena hive as the LAN boxes. One repo
-manages the house and the cloud; the off-site leg is just more closures in
-the same control plane. The SIEM went declarative too: the fleet moved off
-**Wazuh** onto a leaner **Loki/Alloy** stack (`siem-lite`) — Alloy ships
-every host's journal to Loki on `mgmt`, and Alertmanager pushes to a
-self-hosted ntfy topic. That cutover was gated, because `mgmt` carries the
-LAN's DNS and PKI and a bad deploy there is felt everywhere.
+folded into the same flake and Colmena hive as the LAN boxes — one repo
+managing the house and the cloud. It's currently torn down, and that's the
+part worth noticing: because the leg is code, decommissioning it cost
+nothing and bringing it back is a `terraform apply` and a `colmena apply`
+away. The SIEM went declarative too: the fleet moved off **Wazuh** onto a
+leaner **Loki/Alloy** stack (`siem-lite`) — Alloy ships every host's journal
+to Loki on `mgmt`, and Alertmanager pushes to a self-hosted ntfy topic. That
+cutover was gated, because `mgmt` carries the LAN's DNS and PKI and a bad
+deploy there is felt everywhere.
 
 ## The security lab
 

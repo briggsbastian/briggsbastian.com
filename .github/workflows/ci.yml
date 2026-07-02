@@ -34,3 +34,29 @@ jobs:
         with:
           name: site
           path: dist/
+
+  # Deploys to GitHub Pages (enable Pages with "GitHub Actions" as the source).
+  # This runs on the public mirror, which only receives commits the private
+  # Forgejo CI already gated (typecheck+build, gitleaks, nix build).
+  deploy:
+    if: github.server_url == 'https://github.com' && github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: site
+          path: dist/
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
