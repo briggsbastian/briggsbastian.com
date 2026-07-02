@@ -11,19 +11,10 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
-    runs-on: nix
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: install
-        run: nix develop --command npm ci
-
-      - name: typecheck
-        run: nix develop --command npm run check
-
-      - name: build
-        run: nix develop --command npm run build
+  # Typecheck + build happen inside the Nix sandbox (flake buildPhase runs
+  # `npm run check` before `npm run build`): the runner's work dir is noexec
+  # under systemd hardening, so npm postinstall binaries (esbuild) can't run
+  # from a checkout — but store paths execute fine.
 
   # Secret scan on every push; the repo mirrors publicly, so a leaked key
   # would be exposed the moment it lands.
@@ -36,8 +27,8 @@ jobs:
       - name: gitleaks
         run: nix run nixpkgs#gitleaks -- detect --source . --no-banner --redact
 
-  # Build the site as a Nix derivation — the exact store path cloud1's nginx
-  # serves. If this fails, the fleet flake can't consume the site either.
+  # Typecheck + build the site as a Nix derivation — the exact artifact
+  # any host (or the fleet flake) would serve.
   nix-build:
     runs-on: nix
     steps:
@@ -51,7 +42,7 @@ jobs:
   # Prereq: GitHub PAT (Contents: Read/Write on briggsbastian.com) as the
   # Forgejo Actions secret GH_MIRROR_TOKEN (repo Settings → Actions → Secrets).
   mirror:
-    needs: [build, gitleaks, nix-build]
+    needs: [gitleaks, nix-build]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: nix
     steps:

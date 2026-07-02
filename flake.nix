@@ -23,9 +23,13 @@
 
           env.ASTRO_TELEMETRY_DISABLED = "1";
 
+          # check runs in here too: the Forgejo runner's work dir is noexec
+          # (systemd hardening), so anything that executes deps must happen
+          # inside the sandbox, where binaries live in the store.
           buildPhase = ''
             runHook preBuild
             export HOME=$TMPDIR
+            npm run check
             npm run build
             runHook postBuild
           '';
