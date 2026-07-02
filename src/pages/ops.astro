@@ -1,158 +1,169 @@
 ---
 import Base from '../layouts/Base.astro';
 
-/*
- * ── THE OPS PAGE: what it is and what makes it "real" ──────────────
- * This page is the DevOps legitimacy play. The thesis: anyone can list
- * "Kubernetes, Terraform, CI/CD" on a resume — almost nobody publishes
- * SLOs, postmortems, and runbooks. Those artifacts are how operators
- * recognize each other. Everything below is a MOCK shaped like the real
- * thing; each section's comment says what real artifact replaces it.
- *
- * TODO(briggs): every number, incident, and runbook on this page is
- * invented. Replace section by section as the homelab generates real
- * history. The structure is the part to keep.
- */
-
-// SLOs — replace with targets you actually measure once monitoring is
-// stood up. "Real" = each row backed by a recorded signal + an alert
-// that fires when the error budget burns too fast (tool of your choice;
-// NixRMM snapshots can carry several of these).
-const slos = [
-  { service: 'briggsbastian.com', slo: '99.9% availability', window: '30d', current: '100%', budget: 'untouched' },
-  { service: 'UniFi network core', slo: '99.9% availability', window: '30d', current: '99.96%', budget: '24% burned' },
-  { service: 'Media stack (Proxmox VMs)', slo: '99.5% availability', window: '30d', current: '99.74%', budget: '39% burned' },
-  { service: 'Backups (NAS → offsite)', slo: 'RPO ≤ 24h, restore-tested monthly', window: '90d', current: 'RPO 8h', budget: 'last restore test: May 2026' },
+// media stays generic
+const hosts = [
+  { name: 'desktop', role: 'Workstation, and the Colmena deploy controller the fleet is pushed from', zone: 'lan' },
+  { name: 'mgmt', role: 'Internal DNS, a private step-ca CA, Forgejo, the Harmonia binary cache, and the SIEM', zone: 'lan' },
+  { name: 'media', role: 'The media stack, declaratively; storage mounted from the NAS over NFS', zone: 'lan' },
+  { name: 'playground', role: 'libvirt security lab: Kali + Parrot, reached in-browser through Guacamole', zone: 'lan' },
+  { name: 'hacktop', role: 'Staging host, and the self-hosted Forgejo Actions runner that gates the fleet', zone: 'lan' },
+  { name: 'cloud1', role: 'Linode node, off-site, in the same flake, installed with nixos-anywhere', zone: 'cloud' },
+  { name: 'nas', role: 'Ubuntu 24.04 over NFSv4.2; the one host I left off NixOS on purpose', zone: '–' },
 ];
 
-// Pipeline — this one is mostly real already: it describes this site's
-// own CI. Point each stage at the actual workflow once the repo is public.
-const pipeline = [
-  { stage: 'Typecheck', detail: 'astro check — schema-validated content; bad frontmatter fails the build, not the reader.' },
-  { stage: 'Build', detail: 'Fully static output. The artifact that gets tested is the artifact that ships.' },
-  { stage: 'Deploy', detail: 'GitHub Actions publishes main to Pages. No human hands between merge and production.' },
-  { stage: 'Rollback', detail: 'git revert && git push. Recovery is the same pipeline, not a special ceremony.' },
-];
-
-// Postmortems — the highest-signal artifact on this page. One honest
-// writeup of a real homelab failure beats ten capability claims.
-// Format: blameless, timeline-aware, ends in a change that stuck.
-const incidents = [
-  {
-    id: 'INC-2026-03',
-    date: 'March 2026',
-    title: 'Backup job + media library scan collided, saturating the NAS for 9 hours',
-    impact: 'Backup RPO breached (31h vs 24h target). No data loss.',
-    lesson:
-      'The runbook was wrong — it predated the current storage layout. Fix: runbooks now live in the same repo as the configs they describe, and the monthly restore test exercises one runbook at random.',
-  },
-  {
-    id: 'INC-2026-01',
-    date: 'January 2026',
-    title: 'UniFi firewall rule rollout cut management access to the Proxmox hosts',
-    impact: 'Blind to the hypervisors for 47 minutes. Nothing actually failed — but the absence of green is not red.',
-    lesson:
-      'A firewall change passed review because the diff looked small. Fix: connectivity checks now run from both sides of every segment boundary after a change, and inter-network rule changes get a 5-minute auto-revert window unless confirmed.',
-  },
-];
-
-// Reference architecture — MOCK until built. This is the SecDevOps
-// learning target: a small Linode fleet that makes every claim on this
-// page real. LEARNING_PATHWAY.md (repo root, untracked) maps each
-// component to a build phase. TODO(briggs): as phases complete, this
-// section stops being aspirational.
 const platform = [
   {
-    name: 'Provisioning as code',
-    detail: 'OpenTofu drives the Linode API — instances, Cloud Firewalls, DNS, Object Storage. Infrastructure is a reviewed plan, never console clicks.',
+    name: 'One flake, one apply',
+    detail: 'Six NixOS hosts (five in the house, one on Linode) plus an Ubuntu NAS live in a single Nix flake and deploy with colmena apply from one workstation. Adding a host means a new directory and one line.',
   },
   {
-    name: 'NixOS on rented metal',
-    detail: 'Linode ships no NixOS image, so nixos-anywhere installs it over SSH. Every cloud node is a flake target: rebuilt, rolled back, and drift-checked like the homelab.',
+    name: 'Provision vs. configure',
+    detail: 'Terraform makes cloud boxes exist; nixos-anywhere wipes them to NixOS; Nix owns everything inside. Neither tool reaches into the other’s lifecycle.',
   },
   {
-    name: 'Supply-chain discipline',
-    detail: 'CI builds containers, scans them, and pushes by digest — never :latest, never unscanned. The pipeline that deploys is the pipeline that gates.',
+    name: 'A deploy user that can’t get a shell',
+    detail: 'Colmena pushes closures as a dedicated deploy user, a Nix trusted-user with scoped NOPASSWD sudo for only the activation commands. A stolen deploy key re-runs a build; it never opens root.',
   },
   {
-    name: 'No standing credentials',
-    detail: 'Short-lived OIDC tokens where supported, tightly-scoped API tokens where not, and sops-encrypted secrets decrypted only on the target host.',
+    name: 'Secrets keyed to the host',
+    detail: 'sops-nix; each host decrypts its own secrets with its existing SSH host key via ssh-to-age. No key distribution, and no plaintext secret in the Nix store.',
   },
   {
-    name: 'One mesh, no exceptions',
-    detail: 'WireGuard joins the Linode fleet to the homelab — cloud nodes are just more fleet. Management traffic never rides the public interface.',
+    name: 'A private CA, wired into NixOS',
+    detail: 'step-ca issues real, auto-renewing certificates to internal services over its own ACME endpoint. Trusting the root is a module a host opts into.',
   },
   {
-    name: 'Offsite backups that restore',
-    detail: 'restic ships NAS and cloud state to Linode Object Storage, encrypted client-side. The monthly restore test is what makes them backups instead of prayers.',
+    name: 'A SIEM defined in the flake',
+    detail: 'Wazuh is out; a declarative Loki/Alloy/Alertmanager stack ships every host’s journal to mgmt, with alert rules in git and alerts pushed to a self-hosted ntfy topic. The cutover was gated on mgmt because it serves DNS and PKI.',
   },
 ];
 
-// Runbooks — replace with links into the homelab repo (docs/ rendered or
-// public excerpts). Title + trigger + first action is the legitimacy
-// signal; full content can stay private.
+const pipeline = [
+  { stage: 'flake check', detail: 'nix flake check evaluates every host in the fleet. Bad config fails here, before anything is built.' },
+  { stage: 'gitleaks', detail: 'Every push is scanned for secrets. The repo is mirrored publicly, so a leaked key is exposed the moment it lands.' },
+  { stage: 'build all hosts', detail: 'A matrix builds every host against the Harmonia binary cache, fail-fast off. One broken host doesn’t hide the others.' },
+  { stage: 'publish on green', detail: 'Only after the gates pass does a mirror job force-push to the public GitHub repo. Red commits stay in the private Forgejo and never reach the public mirror.' },
+];
+
+const signals = [
+  { signal: 'Internal TLS', tells: 'Every internal service on a real step-ca cert, ~90-day, auto-renewed', state: 'live · 15 vhosts' },
+  { signal: 'Fleet drift', tells: 'colmena apply is a clean no-op when a host matches the flake', state: 'live · equality check' },
+  { signal: 'SIEM enrollment', tells: 'Every host shipping its journal to the homelab SIEM', state: 'live · Loki/Alloy' },
+  { signal: 'Binary cache', tells: 'A green build hits the Harmonia cache instead of rebuilding', state: 'live' },
+  { signal: 'Log retention', tells: 'Journals shipped to a central store, 30-day, single-tenant', state: 'live' },
+  { signal: 'Availability SLOs + error budgets', tells: 'A number I’d actually defend a change against', state: 'not yet measured' },
+];
+
+const incidents = [
+  {
+    id: 'pki/dns-deadlock',
+    date: 'Jun 15, 2026',
+    title: 'Every internal service quietly served the wrong certificate for a day',
+    impact:
+      'All fifteen *.mgmt.lan services fell back to self-signed certs: trust warnings fleet-wide and the binary cache untrusted. No data exposed; step-ca itself was healthy.',
+    lesson:
+      'mgmt was resolving DNS upstream to 1.1.1.1, not its own AdGuard, so step-ca’s HTTP-01 ACME validation couldn’t resolve *.mgmt.lan to fetch challenges; every order failed and nginx fell back to minica. The box that serves DNS couldn’t use it to validate its own certs. Fix: pin the ACME domains to mgmt’s own IP in networkd-managed /etc/hosts, clear the stale renew units, redeploy. The same bootstrap deadlock is why Colmena deploys by IP rather than by the name AdGuard resolves.',
+  },
+  {
+    id: 'drift/mgmt-channel',
+    date: 'Jun 20, 2026',
+    title: 'The box that runs the fleet had quietly stopped running the fleet’s config',
+    impact:
+      'Weeks of staged flake changes were never live on mgmt, and colmena apply --on mgmt then failed auth: the deploy user only exists in the flake, which wasn’t the active system.',
+    lesson:
+      'An unplanned nixos-rebuild had switched mgmt to a channel build, silently breaking Colmena management. Drift stays hidden until you go to deploy. Fix: re-fold carefully. Nix store diff-closures to confirm DNS/PKI weren’t in the diff, dry-activate to see what would restart, then switch on-box to recreate the deploy user and bring the flake live. Drift detection only works if you actually run the equality check, and the most-trusted box is the one worth checking most.',
+  },
+  {
+    id: 'net/wifi-deploy',
+    date: 'Jun 14–15, 2026',
+    title: 'A deploy that restarts the network, on a box reachable only over the network',
+    impact:
+      'A channel downgrade restarted NetworkManager on the Wi-Fi-only hacktop; it dropped off Wi-Fi and didn’t reconnect. The closure applied fine; the box was just gone. A later dead Ethernet dongle black-holed the route and caused ARP flux, taking it fully offline.',
+    lesson:
+      'Know which deploys touch the link you’re standing on. Fix: pull the dead dongle to clear the ARP flux, redeploy from the no-git /tmp copy without bouncing NetworkManager, and promote “wire it to Ethernet with a static lease” to an action item. The fragile host is the one with no second route in.',
+  },
+  {
+    id: 'cloud/kexec-oom',
+    date: 'Jun 20, 2026',
+    title: 'The first cloud node OOM’d in the middle of its own install',
+    impact:
+      'nixos-anywhere hung bringing up the first Linode node: a 1 GB Nanode couldn’t evaluate the NixOS closure in the in-RAM kexec environment.',
+    lesson:
+      'The fix was a terraform destroy and a bump to 2 GB. Greenfield NixOS installs need RAM headroom for the kexec; the smallest instance doesn’t leave enough for the install to fit.',
+  },
+];
+
 const runbooks = [
-  { name: 'nas-array-degraded', trigger: 'Disk/array health alert on the NAS', firstMove: 'Identify the failing disk before touching anything — rebuild beats restore.' },
-  { name: 'gateway-unreachable', trigger: 'UniFi gateway offline from the trusted lan', firstMove: 'Console in locally before power-cycling. Find out why before you make it forget.' },
-  { name: 'restore-test-monthly', trigger: 'Calendar, first Saturday', firstMove: 'Pick a random dataset, restore to scratch, diff against source. Untested backups are prayers.' },
-  { name: 'nixos-vm-wont-boot', trigger: 'NixOS VM stuck after a config change', firstMove: 'Boot the previous generation from the Proxmox console — generations exist for exactly this.' },
+  { name: 'host-wont-boot', trigger: 'A NixOS host is stuck after a config change', firstMove: 'Boot the previous generation from the bootloader menu, then colmena apply the known-good closure. That is what generations are for.' },
+  { name: 'gated-mgmt-deploy', trigger: 'Any change to mgmt: DNS and PKI live here', firstMove: 'Never push blind: colmena apply --dry-activate first, check nix store diff-closures for DNS/PKI, keep nixos-rebuild --rollback ready, then apply.' },
+  { name: 'deploy-with-secrets', trigger: 'A deploy needs sops secrets the flake can’t see', firstMove: 'Secrets are gitignored and flakes only read tracked files. Deploy from an rsync’d /tmp copy of the tree, not the dirty repo.' },
+  { name: 'cert-not-trusted', trigger: 'An internal service is serving an untrusted cert', firstMove: 'Check mgmt is resolving through its own AdGuard, not upstream. ACME validation needs *.mgmt.lan to resolve locally before step-ca can issue.' },
+  { name: 'drift-check', trigger: 'Unsure a host still matches its config', firstMove: 'colmena apply should be a no-op. If it isn’t, the host has drifted. Find out why before forcing the closure.' },
 ];
 ---
 
 <Base
-  title="Ops — Briggs Bastian"
-  description="SLOs, postmortems, and runbooks. How Briggs Bastian runs systems — the receipts, not the resume keywords."
+  title="Ops, Briggs Bastian"
+  description="How Briggs Bastian runs a hybrid NixOS estate: the deploy model, the pipeline, the signals he watches, and the incidents that changed how it works."
   accent="brass"
 >
   <section class="container intro">
     <p class="kicker">Operations</p>
-    <h1>The receipts.</h1>
+    <h1>How it runs.</h1>
     <p class="lede">
-      Anyone can put "CI/CD" on a resume. This page is the part that's hard
-      to fake: the service levels I hold myself to, the incidents I've
-      caused and what they changed, and the runbooks I reach for at 3 a.m.
-      All of it from infrastructure I personally own and operate.
+      This page covers how my estate is actually deployed, the signals I
+      watch, and the incidents I've caused and what they changed. It runs on a
+      hybrid NixOS fleet I own and operate.
     </p>
   </section>
 
   <section class="container block">
-    <div class="block-head" data-num="01"><p class="kicker">Service level objectives</p></div>
+    <div class="block-head" data-num="01"><p class="kicker">The estate</p></div>
     <p class="blurb">
-      Targets are promises with math. Each one needs a measured signal
-      behind it, and the error budget — not my mood — decides whether the
-      next change ships.
+      Five NixOS hosts on a UniFi network, a sixth off-site on Linode, and
+      one Ubuntu NAS left off NixOS on purpose, all described in a single flake
+      and deployed with one <code>colmena apply</code>.
     </p>
     <div class="table-wrap">
       <table>
         <thead>
           <tr>
-            <th scope="col">Service</th>
-            <th scope="col">Objective</th>
-            <th scope="col">Window</th>
-            <th scope="col">Current</th>
-            <th scope="col">Error budget</th>
+            <th scope="col">Host</th>
+            <th scope="col">Role</th>
+            <th scope="col">Zone</th>
           </tr>
         </thead>
         <tbody>
-          {slos.map((row) => (
+          {hosts.map((h) => (
             <tr>
-              <td class="mono">{row.service}</td>
-              <td>{row.slo}</td>
-              <td class="mono">{row.window}</td>
-              <td class="mono good">{row.current}</td>
-              <td>{row.budget}</td>
+              <td class="mono">{h.name}</td>
+              <td>{h.role}</td>
+              <td class="mono">{h.zone}</td>
             </tr>
           ))}
         </tbody>
       </table>
     </div>
+    <ol class="pipeline">
+      {platform.map((item, i) => (
+        <li class="panel" data-spot>
+          <span class="step-no">{String(i + 1).padStart(2, '0')}</span>
+          <div>
+            <h3>{item.name}</h3>
+            <p>{item.detail}</p>
+          </div>
+        </li>
+      ))}
+    </ol>
   </section>
 
   <section class="container block">
     <div class="block-head" data-num="02"><p class="kicker">The pipeline</p></div>
     <p class="blurb">
-      This site ships itself — the pipeline below is the one that deployed
-      the page you're reading. Merge to main is the only deploy button.
+      Changes to the infra repo run through a self-hosted Forgejo Actions
+      pipeline on <code>hacktop</code>. Forgejo is the private source of
+      truth; GitHub is the public mirror, and only green builds reach it.
     </p>
     <ol class="pipeline">
       {pipeline.map((step, i) => (
@@ -165,14 +176,48 @@ const runbooks = [
         </li>
       ))}
     </ol>
+    <p class="fleet-line">
+      next: <strong>NixOS VM tests</strong>, boot a host in a VM and assert
+      its services before a change touches real hardware · then
+      <strong>merge-gated auto-deploy</strong> to the staging boxes. The
+      runner holds deploy keys to the whole fleet, so it's treated as the most
+      sensitive box on the network.
+    </p>
   </section>
 
   <section class="container block">
-    <div class="block-head" data-num="03"><p class="kicker">Incidents & postmortems</p></div>
+    <div class="block-head" data-num="03"><p class="kicker">Signals</p></div>
     <p class="blurb">
-      Blameless, written within a week, and each one ends in a change that
-      stuck. An ops story without failures in it is a story about systems
-      nobody was watching.
+      A signal is something you can check. These are the ones I watch; the
+      last row is the one I don't measure yet.
+    </p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Signal</th>
+            <th scope="col">What it tells me</th>
+            <th scope="col">State</th>
+          </tr>
+        </thead>
+        <tbody>
+          {signals.map((row) => (
+            <tr>
+              <td class="mono">{row.signal}</td>
+              <td>{row.tells}</td>
+              <td class={row.state.startsWith('live') ? 'mono good' : 'mono'}>{row.state}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="container block">
+    <div class="block-head" data-num="04"><p class="kicker">Incidents &amp; postmortems</p></div>
+    <p class="blurb">
+      Blameless, pulled straight from the homelab log, each ending in a change
+      that stuck.
     </p>
     <div class="incidents">
       {incidents.map((inc) => (
@@ -190,38 +235,11 @@ const runbooks = [
   </section>
 
   <section class="container block">
-    <div class="block-head" data-num="04"><p class="kicker">Reference architecture</p></div>
-    <p class="blurb">
-      The cloud half of the estate: a deliberately small Linode fleet,
-      because SecDevOps is a set of habits, not a budget line. The pipeline
-      and the perimeter are the same design problem — so they're designed
-      together.
-    </p>
-    <ol class="pipeline platform">
-      {platform.map((item, i) => (
-        <li class="panel" data-spot>
-          <span class="step-no">{String(i + 1).padStart(2, '0')}</span>
-          <div>
-            <h3>{item.name}</h3>
-            <p>{item.detail}</p>
-          </div>
-        </li>
-      ))}
-    </ol>
-    <p class="fleet-line">
-      fleet: <strong>edge</strong> — Nanode 1GB · Caddy, Gatus, WireGuard ·
-      <strong>forge</strong> — Linode 2GB · containers, game-server tests ·
-      <strong>object storage</strong> — encrypted offsite backups.
-      Total: the cost of two coffees a month.
-    </p>
-  </section>
-
-  <section class="container block">
     <div class="block-head" data-num="05"><p class="kicker">Runbooks</p></div>
     <p class="blurb">
       If a failure mode is known, the response shouldn't be improvised.
-      Runbooks live in the same repo as the configuration they describe —
-      they version together or they drift apart.
+      Runbooks live in the same repo as the configuration they describe, so the
+      two version together.
     </p>
     <ul class="runbooks">
       {runbooks.map((rb) => (
@@ -244,9 +262,15 @@ const runbooks = [
   }
 
   .blurb {
-    max-width: 38rem;
+    max-width: 40rem;
     color: var(--muted);
     margin-block: 0.75rem 2rem;
+  }
+
+  .blurb code {
+    font-family: var(--mono);
+    font-size: 0.85em;
+    color: var(--accent);
   }
 
   .mono {
@@ -256,6 +280,7 @@ const runbooks = [
 
   .table-wrap {
     overflow-x: auto;
+    margin-bottom: 2.25rem;
   }
 
   table {
@@ -296,9 +321,10 @@ const runbooks = [
 
   .fleet-line {
     margin-top: 1.75rem;
+    max-width: 46rem;
     font-family: var(--mono);
     font-size: 0.8125rem;
-    line-height: 2;
+    line-height: 1.9;
     color: var(--faint);
   }
 
@@ -335,7 +361,7 @@ const runbooks = [
   }
 
   .incident {
-    max-width: 50rem;
+    max-width: 52rem;
     padding: 1.75rem;
     border-left: 2px solid var(--accent);
   }

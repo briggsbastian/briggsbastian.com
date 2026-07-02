@@ -1,89 +1,149 @@
 ---
 import Base from '../layouts/Base.astro';
 
-// TODO(briggs): exact title at Libra and the bullet points are written from
-// "senior security position, I make most of the decisions, I do it all" —
-// tighten them to what you actually do.
 const experience = [
   {
     company: 'Libra Solutions Group',
-    title: 'Senior Security Engineer',
-    dates: 'Sept 2025 — Present',
+    title: 'Sr. Security Analyst',
+    dates: 'Sept 2025 – Present',
     bullets: [
-      'Own the security program end to end: architecture, tooling selection, policy, and incident response all route through one desk — mine.',
-      'Set and defend the technical direction for detection, hardening, and infrastructure security, making the final call on what gets deployed and why.',
-      'Operate across the full stack — from SIEM engineering and EDR strategy to network architecture and the automation that keeps it all auditable.',
-      'Translate security posture into decisions leadership can act on, replacing vendor checklists with engineering judgment.',
+      'Own the security program as architect and decision-maker: tooling selection, the control architecture across Defender, Vanta, Purview, and MDR, and the tradeoffs end to end.',
+      'Stood up and operate the Microsoft Defender suite as the core endpoint and threat-protection stack.',
+      'Designed the SOC 2 control architecture and automated evidence collection in Vanta, mapping technical controls to audit requirements and translating findings for non-technical stakeholders.',
+      'Designed and stood up the company’s DLP program on Microsoft Purview from scratch: org-wide PII, HIPAA/PHI, and Copilot policies on a phased simulation-to-enforcement roadmap, with operational SOPs for alert triage, tuning, and rollout. Endpoint DLP through Sophos.',
+      'Manage MDR coverage with Red Canary and Sophos.',
+      'Own vulnerability management across Qualys, Fortra, and HivePro.',
+      'Built the server patch-management program in ConnectSecure: a three-ring rollout model (canary → broad production → crown jewels), per-ring scheduler policies, a rollback runbook, and the operator guide and SOPs that let the MSP run it under CAB governance.',
+      'Work identity-compromise incidents end to end in Defender: credential revocation, sign-in blocks, and forced resets, from alert to closure.',
+      'Track work and incidents across the Atlassian stack.',
+    ],
+  },
+  {
+    company: 'Self-Directed: Homelab Platform',
+    title: 'Infrastructure & SecDevOps Engineering',
+    dates: '2020 – Present',
+    bullets: [
+      'Design and operate a hybrid estate: six NixOS hosts (five on-prem on UniFi, one Linode cloud node) plus an Ubuntu NAS, all described in a single Nix flake as one source of truth and deployed fleet-wide with one `colmena apply`. Adding a host takes a new directory and one line.',
+      'Keep provisioning separate from configuration: Terraform stands up the cloud instance and its Cloud Firewall, nixos-anywhere + disko handle greenfield installs, and Nix owns everything inside the box, reproducible and drift-free.',
+      'Built a gated CI/CD pipeline on a self-hosted Forgejo Actions runner: nix flake check → gitleaks secret scan → matrix build of every host against a self-hosted Harmonia binary cache → a publish-on-green job that mirrors to a public GitHub repo only after all gates pass.',
+      'Designed a least-privilege deploy trust model, a scoped `deploy` user that can re-activate a build but never open a root shell, with sops-nix secrets keyed to each host’s SSH host key (no key distribution, no plaintext in the store).',
+      'Stood up a private PKI with step-ca: an internal CA issuing auto-renewing mTLS certs to ~15 services over its own ACME endpoint, packaged as a reusable NixOS module any host opts into.',
+      'Run a declarative observability/SIEM stack (Grafana, Loki, Grafana Alloy log shipping, Alertmanager, and ntfy), migrated off Wazuh so detections and dashboards version alongside the config.',
+      'Retired the fleet’s Tactical RMM/MeshCentral stack once declarative management made it redundant; the config repo replaced the agent.',
+      'Architected the network, UniFi gateway with VLAN segmentation (trusted / IoT / guest), per-host nftables firewalls, and a planned WireGuard tunnel to the cloud node, and hardened services with systemd sandboxing and CIS-informed defaults.',
+      'Operate a purple-team loop on a libvirt/KVM lab (Kali + Parrot via in-browser Guacamole): attack the fleet, confirm the SIEM detects it, then declaratively rebuild the “compromised” host to known-good with one command. Recovery is a rebuild.',
     ],
   },
   {
     company: 'Kraft Kennedy',
-    title: 'Security Engineer',
-    dates: 'Aug 2022 — Sept 2025',
+    title: 'SOC Analyst, Tier 1',
+    dates: 'Aug 2022 – Sept 2025',
     bullets: [
-      'Subject matter expert for ConnectWise SIEM — created and curated detection alerting in Kibana across client environments.',
-      'Supported SIEM deployment and configuration for customers end to end.',
-      'Managed security tool integrations spanning EDR, DNS filtering, and email security platforms.',
+      'Detection-engineering SME for ConnectWise SIEM: authored and curated alert logic across a multi-tenant managed client base, cutting false positives and codifying repeatable detections per environment.',
+      'Ran incident response end to end across the managed client base (triage, containment with SentinelOne, and zero-trust enforcement with Threatlocker), feeding findings back into detection content.',
+      'RMM deployment, automation, and management.',
+      'Email hygiene and journaling with Mimecast.',
+      'Ticket management in ConnectWise PSA; vulnerability scanning with Tenable.io.',
     ],
   },
   {
     company: 'Sprout Mortgage',
-    title: 'IT Support',
-    dates: 'Feb 2022 — July 2022',
+    title: 'Helpdesk Technician',
+    dates: 'Feb 2022 – July 2022',
     bullets: [
-      'Account management and software support for Microsoft Office 365 and the Encompass mortgage platform.',
+      'Phishing email analysis and response.',
+      'Office 365 troubleshooting and support.',
+      'Ticket and SOP management in FreshDesk.',
     ],
-  },
-  {
-    company: 'JNC Management',
-    title: 'Sales Representative',
-    dates: '2019 — 2021',
-    bullets: [
-      'Covered the Simi Valley and Topanga regions; managed Northridge branch operations.',
-    ],
-  },
-  {
-    company: "McDonald's",
-    title: 'Crew Member',
-    dates: '2017 — 2019',
-    bullets: ['Where the uptime requirements were the strictest.'],
   },
 ];
 
 const education = [
-  { school: 'UCSD Cybersecurity Bootcamp', detail: 'Completed 2021' },
-  { school: 'Simi Valley High School', detail: 'Class of 2019' },
+  { school: 'University of California San Diego', detail: 'Cybersecurity Bootcamp Certificate' },
+  { school: 'Simi Valley High School', detail: 'Diploma' },
 ];
 
-const skills = [
-  { category: 'SIEM / IDS', items: ['ConnectWise SIEM', 'Wazuh', 'BlackPoint', 'Microsoft Sentinel'] },
-  { category: 'EDR', items: ['SentinelOne', 'Microsoft Defender for Endpoint'] },
-  { category: 'DNS Security', items: ['Cisco Umbrella / OpenDNS', 'Atakama'] },
-  { category: 'Email Security', items: ['Mimecast', 'Barracuda', 'Tessian'] },
-  { category: 'Security Awareness', items: ['KnowBe4', 'BreachSecureNow'] },
-  { category: 'Network Infrastructure', items: ['Cisco Catalyst / Meraki', 'Ubiquiti UniFi', 'SonicWall', 'Fortinet', 'pfSense'] },
-  { category: 'Operating Systems', items: ['Linux (NixOS at home and anywhere they let me)', 'Windows', 'macOS'] },
+const securitySkills = [
+  { category: 'SIEM & Threat Hunting', items: ['ConnectWise SIEM', 'BlackPoint', 'Splunk', 'Microsoft Advanced Threat Hunting'] },
+  { category: 'EDR / MDR', items: ['Sophos', 'SentinelOne', 'Red Canary', 'Defender for Endpoint'] },
+  { category: 'Vulnerability Management', items: ['Tenable', 'Qualys', 'Fortra', 'HivePro', 'FortiSASE'] },
+  { category: 'Email Security', items: ['Mimecast', 'Barracuda', 'Tessian', 'Defender'] },
+  { category: 'Zero Trust', items: ['Threatlocker', 'Intune'] },
+  { category: 'RMM', items: ['Atera', 'TeamViewer', 'ConnectWise Automate'] },
+  { category: 'Document Management', items: ['MoveDocs', 'iManage', 'NetDocs'] },
+  { category: 'Detection & Purple Team', items: ['Detection engineering', 'KQL / Advanced Hunting', 'Kali / Parrot', 'attack → detect → rebuild'] },
+  { category: 'PKI & Secrets', items: ['step-ca (private CA, ACME, mTLS)', 'sops-nix / age', 'SSH host-key secrets', 'least-privilege deploy'] },
+  { category: 'Hardening & Frameworks', items: ['CIS-informed baselines', 'SOC 2', 'systemd sandboxing', 'zero-trust / least-privilege', 'threat modeling'] },
+  { category: 'Supply-Chain Security (learning)', items: ['gitleaks', 'security-gated CI/CD', 'SBOMs (sbomnix)', 'SLSA / EO-14028'] },
 ];
+
+const infraSkills = [
+  { category: 'Cloud', items: ['Azure', 'Microsoft 365 & Entra', 'AWS', 'Linode'] },
+  { category: 'Infrastructure as Code', items: ['Pulumi', 'Terraform', 'OpenTofu', 'Ansible'] },
+  { category: 'Config as Code', items: ['NixOS (flakes, module system)', 'Colmena', 'sops-nix', 'nixos-anywhere / disko'] },
+  { category: 'CI & Self-Hosting', items: ['Forgejo (self-hosted runners + workflows)', 'gitleaks', 'Git 🙂'] },
+  { category: 'Architecture & Design', items: ['Hybrid / multi-cloud', 'Reference architectures', 'HLD / LLD', 'Provision-vs-configure', 'Single source of truth', 'Well-architected tradeoffs', 'Reusable modules'] },
+  { category: 'CI/CD & GitOps', items: ['Forgejo Actions', 'Matrix builds', 'Harmonia binary cache', 'gitleaks gating', 'Publish-on-green', 'Git as source of truth'] },
+  { category: 'Observability & SRE', items: ['Grafana', 'Loki', 'Grafana Alloy', 'Alertmanager', 'ntfy', 'Runbooks & postmortems'] },
+  { category: 'Networking', items: ['UniFi (VLAN segmentation)', 'nftables', 'WireGuard (planned)', 'Cloud Firewalls', 'DNS', 'ACME / PKI'] },
+  { category: 'Virtualization & Storage', items: ['libvirt / KVM', 'Guacamole', 'disko (declarative disk)', 'NFS', 'snapshot / restore'] },
+  { category: 'Backup, DR & Hosting', items: ['Datto', 'Axcient', 'Veeam', 'Shared host pool servers'] },
+  { category: 'On-Prem', items: ['Firewalls', 'Access points', 'Switches', 'Data shippers'] },
+];
+
 ---
 
 <Base
-  title="Resume — Briggs Bastian"
-  description="Resume of Briggs Bastian — senior security engineer in Seattle. SIEM engineering, EDR strategy, and infrastructure security."
+  title="Resume: Briggs Bastian"
+  description="Resume of Briggs Bastian, senior security analyst in Seattle. Microsoft Defender, SOC 2, vulnerability management, and a SecDevOps homelab run as code."
   accent="frost"
 >
   <section class="container intro">
     <p class="kicker">Resume</p>
-    <h1>The paper trail.</h1>
+    <h1>Work history.</h1>
+    <p class="motto">NixOS is best for all use cases……</p>
     <p class="lede">
-      Senior security engineer in Seattle. The short version: I went from
-      curating SIEM alerts to owning the whole security program — and the
-      <a href="/projects/">projects</a> are where the same instincts run
-      without a change-control board.
+      Senior security analyst in Seattle, building toward SecDevOps. I went
+      from triaging SIEM alerts on a SOC floor to running a company's security
+      stack (Defender, SOC 2, DLP, MDR, and vulnerability and patch
+      management). At home I run a hybrid NixOS estate from a single flake,
+      monitored by the same kind of SIEM I tune at work. The
+      <a href="/projects/">projects</a> are where I do the same work without a
+      change-control board.
+    </p>
+    <ul class="contact">
+      <li><a href="mailto:briggsbastian@pm.me">briggsbastian@pm.me</a></li>
+      <li><a href="https://www.linkedin.com/in/briggs-bastian" target="_blank" rel="noopener">linkedin/briggs-bastian</a></li>
+      <li><a href="https://github.com/briggsbastian" target="_blank" rel="noopener">github/briggsbastian</a></li>
+      <li>Seattle, WA</li>
+    </ul>
+    <a
+      class="btn ghost doc-link"
+      href="https://docs.google.com/document/d/1-CE8oNpvgX9QBiURO85Yp9uo3061Fz8Dl_r49UiNbR0/edit?usp=sharing"
+      target="_blank"
+      rel="noopener"
+    >View the original Google Doc ↗</a>
+  </section>
+
+  <section class="container block">
+    <div class="block-head" data-num="01"><p class="kicker">Summary</p></div>
+    <p class="summary-text">
+      Security engineer and systems builder who designs and owns infrastructure
+      end to end: from architecture down to the deployable config. By day I run
+      a company's security program as the decision-maker (Microsoft Defender,
+      SOC 2 via Vanta, DLP, MDR, vulnerability and patch management); after hours
+      I design and operate a hybrid NixOS estate (an on-prem fleet plus a cloud
+      node) as a single source of truth in git, with gated CI/CD, private PKI,
+      centralized observability, and a purple-team loop that proves the
+      detections. Same instincts on both sides: everything as code, least
+      privilege by default, and well-architected tradeoffs between cost,
+      security, and operability. Targeting Solutions Architect / DevOps /
+      Security Engineer / Platform roles.
     </p>
   </section>
 
   <section class="container block">
-    <div class="block-head" data-num="01"><p class="kicker">Experience</p></div>
+    <div class="block-head" data-num="02"><p class="kicker">Experience</p></div>
     <ol class="jobs">
       {
         experience.map((job) => (
@@ -105,7 +165,7 @@ const skills = [
   </section>
 
   <section class="container block">
-    <div class="block-head" data-num="02"><p class="kicker">Education</p></div>
+    <div class="block-head" data-num="03"><p class="kicker">Education</p></div>
     <ul class="edu">
       {
         education.map((entry) => (
@@ -119,10 +179,10 @@ const skills = [
   </section>
 
   <section class="container block">
-    <div class="block-head" data-num="03"><p class="kicker">Tooling</p></div>
+    <div class="block-head" data-num="04"><p class="kicker">Security tooling</p></div>
     <div class="skills">
       {
-        skills.map((group) => (
+        securitySkills.map((group) => (
           <div class="skill-group">
             <h3>{group.category}</h3>
             <ul>
@@ -135,12 +195,87 @@ const skills = [
       }
     </div>
   </section>
+
+  <section class="container block">
+    <div class="block-head" data-num="05"><p class="kicker">Infrastructure &amp; platform</p></div>
+    <div class="skills">
+      {
+        infraSkills.map((group) => (
+          <div class="skill-group">
+            <h3>{group.category}</h3>
+            <ul>
+              {group.items.map((item) => (
+                <li class="tag">{item}</li>
+              ))}
+            </ul>
+          </div>
+        ))
+      }
+    </div>
+    <p class="see-more">
+      The NixOS estate is public: config as code,
+      <a href="https://github.com/briggsbastian">see the setup on GitHub</a>,
+      with the running notes in the <a href="/garden/">garden</a> and the
+      published reference architectures, live topology, and a running decision
+      log on the <a href="/ops/">ops page</a>.
+    </p>
+  </section>
+
 </Base>
 
 <style>
   .block {
     padding-block: clamp(2.5rem, 6vw, 4rem);
     border-top: 1px solid var(--line);
+  }
+
+  .motto {
+    font-family: var(--mono);
+    font-size: 0.875rem;
+    color: var(--accent);
+    margin-top: 0.75rem;
+    letter-spacing: 0.02em;
+  }
+
+  .contact {
+    list-style: none;
+    padding: 0;
+    margin-top: 1.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1rem;
+    font-family: var(--mono);
+    font-size: 0.8125rem;
+    letter-spacing: 0.03em;
+    color: var(--muted);
+  }
+
+  .contact li:not(:last-child)::after {
+    content: '·';
+    margin-left: 1rem;
+    color: var(--faint);
+  }
+
+  .contact a {
+    color: var(--muted);
+    text-decoration-color: var(--line-bright);
+    transition: color 150ms ease;
+  }
+
+  .contact a:hover {
+    color: var(--text);
+  }
+
+  .doc-link {
+    margin-top: 1.75rem;
+  }
+
+  .summary-text {
+    max-width: 50rem;
+    margin-top: 1.5rem;
+    font-size: 1.05rem;
+    line-height: 1.7;
+    color: var(--muted);
   }
 
   .jobs,
@@ -225,5 +360,12 @@ const skills = [
     display: flex;
     flex-wrap: wrap;
     gap: 0.4rem;
+  }
+
+  .see-more {
+    margin-top: 2.5rem;
+    max-width: 44rem;
+    color: var(--muted);
+    font-size: 0.95rem;
   }
 </style>

@@ -1,17 +1,4 @@
 ---
-/*
- * Auvik-style structured topology: a tiered tree (internet → gateway →
- * switching → networks → devices → VMs) with elbow connectors. Initial
- * layout is computed at build time; client JS handles hover focus and
- * expand/collapse of the Proxmox hosts (the tree re-spaces itself and
- * nodes glide to their new positions).
- *
- * The media Proxmox host and its VMs are described generically on
- * purpose — keep it that way.
- * TODO(briggs): VM names below are placeholders — rename to taste
- * (labels only; ids just need to stay unique).
- */
-
 interface NodeDef {
   id: string;
   label: string;
@@ -19,38 +6,34 @@ interface NodeDef {
   r: number;
   blurb: string;
   parent?: string;
-  collapsed?: boolean; // starts with children hidden; click to expand
+  collapsed?: boolean;
 }
 
 const RAW: NodeDef[] = [
-  { id: 'internet', label: 'internet', c: 'none', r: 10, blurb: 'ISP uplink. Untrusted by definition — everything below it is policy.' },
-  { id: 'gateway', label: 'unifi gateway', c: 'ember', r: 13, parent: 'internet', blurb: 'UniFi gateway — routing, firewall rules, and the segmentation between trusted, IoT, and guest all live here.' },
+  { id: 'internet', label: 'internet', c: 'none', r: 10, blurb: 'ISP uplink. Untrusted; everything below it is governed by policy.' },
+  { id: 'gateway', label: 'unifi gateway', c: 'ember', r: 13, parent: 'internet', blurb: 'UniFi gateway: routing, firewall rules, and the segmentation between trusted, IoT, and guest all live here.' },
   { id: 'switch', label: 'unifi switching', c: 'none', r: 9, parent: 'gateway', blurb: 'UniFi switching fabric carrying the networks below.' },
 
-  { id: 'lan', label: 'trusted lan', c: 'moss', r: 10, parent: 'switch', blurb: 'The trusted network — where the fleet lives.' },
-  { id: 'iot', label: 'iot', c: 'brass', r: 10, parent: 'switch', blurb: 'Streaming and smart-home devices. They talk out, not sideways.' },
-  { id: 'guest', label: 'guest', c: 'frost', r: 10, parent: 'switch', blurb: 'UniFi guest network — visitors get internet and nothing else.' },
+  { id: 'lan', label: 'trusted lan', c: 'moss', r: 10, parent: 'switch', blurb: 'The trusted network: where the NixOS fleet lives, all of it deployed from one flake with a single colmena apply.' },
+  { id: 'iot', label: 'iot', c: 'brass', r: 10, parent: 'switch', blurb: 'Streaming and smart-home devices, allowed out to the internet but not across to the LAN.' },
+  { id: 'guest', label: 'guest', c: 'frost', r: 10, parent: 'switch', blurb: 'UniFi guest network: visitors get internet and nothing else.' },
 
-  { id: 'pve-media', label: 'pve · media', c: 'iris', r: 8, parent: 'lan', collapsed: true, blurb: 'Proxmox host running NixOS VMs for the media stack — acquisition through playback. Click to expand.' },
-  { id: 'vm-media-1', label: 'library', c: 'iris', r: 6, parent: 'pve-media', blurb: 'NixOS VM — the media library and playback service.' },
-  { id: 'vm-media-2', label: 'automation', c: 'iris', r: 6, parent: 'pve-media', blurb: 'NixOS VM — keeps the library fed and organized.' },
-  { id: 'vm-media-3', label: 'requests', c: 'iris', r: 6, parent: 'pve-media', blurb: 'NixOS VM — where the household asks for things politely.' },
+  { id: 'desktop', label: 'desktop', c: 'iris', r: 8, parent: 'lan', blurb: 'NixOS workstation and gaming rig, also the deploy controller: colmena apply to the whole fleet runs from here.' },
+  { id: 'mgmt', label: 'mgmt', c: 'iris', r: 8, parent: 'lan', blurb: 'NixOS services host: internal DNS, a private step-ca certificate authority, Forgejo, and the homelab SIEM, a declarative Loki/Alloy stack that replaced Wazuh. Folded into the flake last because the house leans on it.' },
+  { id: 'media', label: 'media', c: 'iris', r: 8, parent: 'lan', blurb: 'NixOS media host: the stack runs declaratively from the flake, storage mounted from the NAS over NFS.' },
 
-  { id: 'pve-sec', label: 'pve · security', c: 'iris', r: 8, parent: 'lan', collapsed: true, blurb: 'Proxmox host for the security VM deployment — where the day job’s instincts get a sandbox. Click to expand.' },
-  { id: 'vm-sec-1', label: 'sensor', c: 'iris', r: 6, parent: 'pve-sec', blurb: 'NixOS VM — network sensor watching the segments.' },
-  { id: 'vm-sec-2', label: 'analysis', c: 'iris', r: 6, parent: 'pve-sec', blurb: 'NixOS VM — where captures and alerts get picked apart.' },
+  { id: 'playground', label: 'playground', c: 'iris', r: 8, parent: 'lan', collapsed: true, blurb: 'NixOS + libvirt security lab: offensive and reverse-engineering VMs, reachable through an in-browser Guacamole session, isolated for purple-team work against the fleet. Click to expand.' },
+  { id: 'vm-kali', label: 'kali', c: 'iris', r: 6, parent: 'playground', blurb: 'Kali Linux, live; the offensive box that attacks the lab to prove the SIEM catches it.' },
+  { id: 'vm-parrot', label: 'parrot', c: 'iris', r: 6, parent: 'playground', blurb: 'ParrotOS, live; the second offensive distro in the kit.' },
+  { id: 'vm-remnux', label: 'remnux', c: 'iris', r: 6, parent: 'playground', blurb: 'REMnux, next in; the Linux toolkit for tearing malware samples apart.' },
+  { id: 'vm-flare', label: 'flare', c: 'iris', r: 6, parent: 'playground', blurb: 'FLARE VM (Windows), next in; the malware-analysis bench, TPM 2.0 emulated via swtpm under OVMF/UEFI.' },
 
-  { id: 'pve-net', label: 'pve · netmgmt', c: 'iris', r: 8, parent: 'lan', collapsed: true, blurb: 'Proxmox host for network management VMs — keeping the UniFi estate observable and honest. Click to expand.' },
-  { id: 'vm-net-1', label: 'controller', c: 'iris', r: 6, parent: 'pve-net', blurb: 'NixOS VM — network controller and management plane.' },
-  { id: 'vm-net-2', label: 'dns', c: 'iris', r: 6, parent: 'pve-net', blurb: 'NixOS VM — internal DNS and the small glue services every lan accretes.' },
-
-  { id: 'gaming', label: 'gaming rig', c: 'iris', r: 8, parent: 'lan', blurb: 'NixOS gaming desktop — proof the declarative life survives contact with GPU drivers.' },
-  { id: 'gameserver', label: 'game server', c: 'iris', r: 8, parent: 'lan', blurb: 'GNOME NixOS box hosting game servers — where Gesture’s dedicated builds will land.' },
-  { id: 'nas', label: 'nas · ubuntu', c: 'none', r: 8, parent: 'lan', blurb: 'Ubuntu 24.04 LTS NAS — bulk storage, and the one holdout from the NixOS takeover.' },
-  { id: 'tv1', label: 'tv', c: 'brass', r: 8, parent: 'iot', blurb: 'Smart TV — quarantined on the IoT network like the chatty appliance it is.' },
-  { id: 'tv2', label: 'tv', c: 'brass', r: 8, parent: 'iot', blurb: 'The other smart TV. Same quarantine, same reasons.' },
-  { id: 'homepod', label: 'homepod', c: 'brass', r: 8, parent: 'iot', blurb: 'Apple HomePod. It needs to hear "set a timer," not see the lan.' },
-  { id: 'guests', label: 'guest devices', c: 'frost', r: 8, parent: 'guest', blurb: 'Whatever friends bring over — captive, segregated, forgotten.' },
+  { id: 'hacktop', label: 'hacktop', c: 'iris', r: 8, parent: 'lan', blurb: 'NixOS staging + CI host: configs are built and verified here before they touch production, and it runs the self-hosted Forgejo Actions runner.' },
+  { id: 'nas', label: 'nas · ubuntu', c: 'none', r: 8, parent: 'lan', blurb: 'Ubuntu 24.04 LTS NAS: bulk storage over NFSv4.2, and the one box kept off the NixOS fleet on purpose.' },
+  { id: 'tv1', label: 'tv', c: 'brass', r: 8, parent: 'iot', blurb: 'Smart TV, quarantined on the IoT network.' },
+  { id: 'tv2', label: 'tv', c: 'brass', r: 8, parent: 'iot', blurb: 'The other smart TV, on the same IoT network for the same reasons.' },
+  { id: 'homepod', label: 'homepod', c: 'brass', r: 8, parent: 'iot', blurb: 'Apple HomePod, on the IoT network. Internet access only, no path to the LAN.' },
+  { id: 'guests', label: 'guest devices', c: 'frost', r: 8, parent: 'guest', blurb: 'Whatever friends bring over, kept on the isolated guest network.' },
 ];
 
 const W = 960;
@@ -75,9 +58,7 @@ const isHidden = (n: NodeDef): boolean => {
   return false;
 };
 
-// Layout for the default (collapsed) state: visible leaves evenly
-// spaced, parents centered over visible children, hidden nodes parked
-// at their parent so they emerge from it on expand.
+// hidden nodes park at parent so they emerge on expand
 const visible = RAW.filter((n) => !isHidden(n));
 const visLeaves = visible.filter(
   (n) => !(children.get(n.id) ?? []).some((k) => !isHidden(k))
@@ -122,7 +103,7 @@ const edges = nodes
   <svg
     id="topo-svg"
     viewBox={`0 0 ${W} ${VIEW_H.collapsed}`}
-    aria-label="Homelab network topology — tiered map from internet to devices"
+    aria-label="Homelab network topology: tiered map from internet to devices"
     aria-describedby="topo-info"
   >
     <g>
@@ -163,7 +144,7 @@ const edges = nodes
     </g>
   </svg>
   <figcaption id="topo-info">
-    Hover a node to inspect it; click a hypervisor to expand its VMs. Green ticks are online status.
+    Hover a node to inspect it; click <strong>playground</strong> to expand its security-lab VMs. Green ticks are online status.
   </figcaption>
 </figure>
 
@@ -176,9 +157,10 @@ const edges = nodes
     display: block;
     width: 100%;
     height: auto;
-    background: var(--bg-raised);
+    background: var(--glass);
     border: 1px solid var(--line);
-    border-radius: 12px;
+    border-radius: var(--radius);
+    box-shadow: var(--glass-rim), var(--panel-shadow);
     user-select: none;
   }
 
@@ -265,7 +247,7 @@ const edges = nodes
     text-anchor: start;
   }
 
-  /* Focus mode: dim everything outside the hovered node's path */
+  /* focus: dim non-path */
   #topo-svg.focused .node:not(.hl) {
     opacity: 0.22;
   }
@@ -412,7 +394,7 @@ const edges = nodes
       info!.replaceChildren();
       const name = document.createElement('strong');
       name.textContent = m.el.dataset.label!;
-      info!.append(name, ` — ${m.el.dataset.blurb!}`);
+      info!.append(name, `, ${m.el.dataset.blurb!}`);
     }
 
     function toggle(m: Meta) {

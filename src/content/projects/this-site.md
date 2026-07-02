@@ -1,9 +1,9 @@
 ---
 title: 'briggsbastian.com'
 summary: 'This site, treated as a production system: Astro static build, Nix flake dev environment, CI pipeline, and a reproducible container image.'
-status: 'shipped'
+status: 'active'
 year: '2026'
-stack: ['Astro', 'Nix Flakes', 'GitHub Actions', 'Docker']
+stack: ['Astro', 'Nix Flakes', 'Forgejo Actions', 'Docker']
 featured: true
 order: 3
 links:
@@ -12,25 +12,26 @@ links:
 
 <!-- TODO(briggs): point links.github at the real repo once pushed. -->
 
-A portfolio site is the one project where the *how* is the portfolio. So
-this site is deliberately run like something that matters:
+On a portfolio site, the *how* is part of the portfolio. So this one is run
+like something that matters:
 
-- **Reproducible dev environment.** The toolchain is pinned in a Nix flake —
-  `nix develop` on any machine yields the same Node, same everything. No
-  "works on my laptop."
+- **Reproducible dev environment.** The toolchain is pinned in a Nix flake:
+  `nix develop` on any machine gives the same Node and the same everything,
+  so there's no "works on my laptop."
 - **Static by default.** Astro renders the whole site to plain HTML at
-  build time. No client-side framework runtime, no hydration — even the
+  build time. No client-side framework runtime, no hydration. Even the
   [interactive homelab topology](/projects/homelab/) is laid out at build
   time, with a few dozen lines of vanilla JS for hover focus and scroll
-  polish. It scores like a static site because it nearly is one.
-- **Pipeline as the front door.** Every push runs type checks and a full
-  build in CI before anything ships. The same pipeline can emit a
-  multi-stage Docker image (build in Node, serve from nginx) for
-  container-based hosting.
+  polish. Performance is what you'd expect from a static site, because it
+  nearly is one.
+- **Everything goes through CI.** Every push to my self-hosted Forgejo
+  runner runs type checks and a full build before anything ships. The same
+  Dockerfile can emit a multi-stage image (build in Node, serve from nginx)
+  for container hosting.
 - **Content as data.** Projects and garden notes are markdown with typed,
-  schema-validated frontmatter — bad metadata fails the build instead of
+  schema-validated frontmatter. Bad metadata fails the build instead of
   shipping silently.
 
-It's a small system, but it's a *complete* one: declared environment,
-verified pipeline, reproducible artifact. The same shape scales up to the
-fleets I run elsewhere.
+It's a small system, but a *complete* one: declared environment, verified
+pipeline, reproducible artifact. The same shape scales up to the fleets I
+run elsewhere.

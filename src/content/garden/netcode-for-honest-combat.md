@@ -1,33 +1,34 @@
 ---
 title: 'Netcode for honest combat'
-description: 'Souls-like PvP lives or dies on whether a trade felt legitimate. Notes on picking a netcode model when "fairness" is the core mechanic.'
+description: 'In a 1v1 duel, a trade only feels fair if both players saw the same fight. Notes on why Gesture is built deterministic and peer-to-peer, with networking left for last.'
 stage: 'seedling'
 planted: 2026-05-20
-tended: 2026-05-28
+tended: 2026-06-29
 topics: ['gamedev', 'netcode', 'gesture']
 ---
 
-Fighting games solved their netcode problem with rollback, and everyone now
-recites "rollback good" as a creed. But a souls-like isn't a fighting game:
-movement is analog and continuous, hit volumes are 3D and animation-driven,
-and encounters aren't a clean 1v1 in a flat arena. The creed doesn't
-transfer cleanly.
+[Gesture](/projects/gesture/) is a 1v1 arena duel where every swing is
+committed, so a trade only feels fair if both players' machines computed the
+same fight from the same inputs. That's why I'm building the simulation to be
+deterministic from the start, instead of adding networking later and hoping it
+reconciles.
 
 Current thinking, loosely held:
 
-- **Full rollback** is brutal with animation-driven 3D hitboxes — resimulating
-  several frames of ragdoll-adjacent state per correction is real CPU, and
-  visual rollback artifacts undermine the "weighty" feel worse than delay does.
-- **Server-authoritative + lag compensation** (the shooter model) fits
-  better than expected, *because attacks are committed*. Long windups mean
-  the server usually has the full swing before the hit window opens — the
-  commitment that defines the genre is also free latency hiding.
-- The real fights are at the edges: backstab validation (teleporting grabs
-  are the genre's shame), trade resolution when both swings land within the
-  compensation window, and how much the defender's reality should be trusted
-  on a roll's i-frames.
+- **Determinism is the fairness guarantee.** The sim runs at a fixed 60 Hz
+  with input kept separate from simulation logic. If both peers step the same
+  inputs through the same deterministic sim, they land on the same state
+  without a server refereeing every hit. That's the rollback and lockstep
+  family, the approach fighting games use, and for a clean 1v1 it fits better
+  than the shooter's server-authoritative model.
+- **Commitment buys some slack.** Attacks have real startup before the hitbox
+  goes live, so there's a window to exchange and reconcile inputs before
+  anything lands. The mechanic that defines the genre also helps the netcode.
+- **The hard cases are at the edges:** backstab validation (no teleporting
+  grabs), trade resolution when both swings land on the same tick, and how
+  much a roll's i-frames can be trusted across a connection.
 
-Suspicion to test: souls-likes have *less* of a netcode problem than
-fighting games, not more, and the genre's bad reputation comes from peer-to-peer
-legacy rather than anything inherent. If the suspicion holds,
-[Gesture](/projects/gesture/) ships server-authoritative and never looks back.
+The discipline that matters right now isn't the netcode itself. It's keeping
+the sim deterministic and the input layer separate so P2P can be added later
+without rewriting combat. Networking comes last on purpose: the fight has to
+feel right offline first. Steam P2P is the target once it does.

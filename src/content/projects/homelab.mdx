@@ -1,23 +1,25 @@
 ---
 title: 'The Homelab'
-summary: 'A UniFi-backed network with NixOS running the bones: three Proxmox hosts full of NixOS VMs, a declarative gaming rig, a game server, and one Ubuntu NAS holdout.'
+summary: 'A UniFi network running a NixOS fleet from one flake: workstation, services host, media, a libvirt security lab, and a staging/CI box, plus an off-site Linode node, all deployed with a single colmena apply. One Ubuntu NAS stays off NixOS on purpose.'
 status: 'active'
 year: 'ongoing'
-stack: ['NixOS', 'Proxmox', 'UniFi', 'Ubuntu 24.04']
-featured: false
-order: 4
+stack: ['NixOS', 'Colmena', 'sops-nix', 'Terraform', 'libvirt', 'UniFi']
+featured: true
+order: 2
 ---
 
 import TopologyGraph from '../../components/TopologyGraph.astro';
 
-{/* The media host is described generically on purpose — keep it that way.
-    Graph data lives in src/components/TopologyGraph.astro. */}
+{/* media stays generic */}
 
-UniFi runs the network; NixOS runs the bones. The lab is a mixed estate —
-three Proxmox hypervisors carrying NixOS VMs, NixOS on the metal where it
-matters, and exactly one machine that got grandfathered in. There is no
-wiki for it; this page is the closest thing the lab has to up-to-date
-documentation, which is itself an argument for the declarative parts.
+UniFi runs the network; NixOS runs everything on it. The Proxmox migration
+is finished. Every server was wiped to NixOS and now runs on bare metal,
+with no hypervisor underneath. What used to be a pile of standalone machines
+is now **one flake, one `colmena apply`**: the whole estate described in a
+single repo, deployed from one workstation, with secrets in sops-nix and
+fresh installs handled by disko + nixos-anywhere. There is no wiki for the
+lab. This page is the closest thing it has to current documentation; for the
+declarative hosts, the config is the documentation.
 
 ## Base topology
 
@@ -25,34 +27,75 @@ documentation, which is itself an argument for the declarative parts.
 
 The trusted network is where the fleet lives:
 
-| Host             | Role                                                       |
-| ---------------- | ---------------------------------------------------------- |
-| `pve · media`    | Proxmox host — NixOS VMs for the media stack               |
-| `pve · security` | Proxmox host — security tooling VM deployment              |
-| `pve · netmgmt`  | Proxmox host — network management VMs                      |
-| `gaming rig`     | NixOS desktop, GPU and all                                 |
-| `game server`    | GNOME NixOS box for hosting game servers                   |
-| `nas`            | Ubuntu 24.04 LTS — bulk storage, the non-NixOS holdout     |
+| Host          | Role                                                                       |
+| ------------- | -------------------------------------------------------------------------- |
+| `desktop`     | NixOS workstation and gaming rig, also the Colmena deploy controller       |
+| `mgmt`        | Internal DNS, a private step-ca CA, the homelab SIEM, and Forgejo          |
+| `media`       | NixOS media host: the media stack run declaratively; storage over NFS      |
+| `playground`  | NixOS + libvirt security lab: Kali, Parrot, and a malware-analysis bench   |
+| `hacktop`     | Staging and the self-hosted CI runner; nothing reaches production unbuilt  |
+| `nas`         | Ubuntu 24.04 LTS: bulk storage over NFS, kept off NixOS on purpose         |
 
-Click any hypervisor in the map to expand the NixOS VMs it carries.
-Segmentation is UniFi policy at the gateway: the IoT network holds two
-smart TVs and a HomePod that can reach the internet but not the lan, and
-visitors land on a guest network that gets them online and nowhere else.
+Click `playground` in the map to expand its security-lab VMs. Segmentation
+is UniFi policy at the gateway: the IoT network holds the smart TVs and a
+HomePod that can reach the internet but not the lan, and visitors land on a
+guest network with internet access and nothing else.
+
+A handful of shared NixOS modules do the load-bearing work: a common
+baseline (key-only SSH, nftables, a hardened `deploy` user, sops wiring,
+and a journal shipper), a module that trusts an **internal step-ca
+certificate authority** and points `security.acme` at its private ACME
+endpoint, and a SIEM-agent module that enrolls any host by being switched
+on. Wiring NixOS to a private CA is uncommon; the payoff is that every
+internal service gets a real, auto-renewing certificate without a public
+name ever leaving the house.
+
+Secrets are sops-nix, and each host decrypts its own with **no key
+distribution at all**: its age identity is derived from its existing SSH
+host key. Colmena pushes closures through a dedicated `deploy` user, a Nix
+trusted-user with scoped NOPASSWD sudo for *only* the activation commands,
+so a stolen deploy key can re-activate a build but can't open a root shell.
+
+## Off-site, same flake
+
+The estate doesn't stop at the house. `cloud1` is a Linode node,
+Terraform-provisioned and installed greenfield with **nixos-anywhere**, then
+folded into the same flake and Colmena hive as the LAN boxes. One repo
+manages the house and the cloud; the off-site leg is just more closures in
+the same control plane. The SIEM went declarative too: the fleet moved off
+**Wazuh** onto a leaner **Loki/Alloy** stack (`siem-lite`) — Alloy ships
+every host's journal to Loki on `mgmt`, and Alertmanager pushes to a
+self-hosted ntfy topic. That cutover was gated, because `mgmt` carries the
+LAN's DNS and PKI and a bad deploy there is felt everywhere.
+
+## The security lab
+
+`playground` is a libvirt host carrying the offensive and reverse-engineering
+VMs, reachable through a clientless, in-browser Guacamole session: **Kali**
+and **ParrotOS** are live for attacking the lab, with **REMnux** and a
+Windows **FLARE** bench (TPM 2.0 emulated via swtpm under OVMF) next in for
+pulling samples apart. It's the range for purple-team work: attack the fleet from the Kali
+box, confirm the SIEM caught it, and where it didn't, write the rule that
+does. On NixOS the cleanup is one command: redeploy the compromised host to
+a known-good state. The loop is attack, detect, rebuild.
 
 ## What it proves
 
-- **Declarative where it counts.** The NixOS machines — VMs and metal —
-  are rebuildable from configuration, not from memory. The undocumented
-  parts of the lab are, not coincidentally, the parts that aren't NixOS
-  yet.
-- **Virtualization as a discipline.** Three hypervisors with deliberate
-  roles — media, security, network management — instead of one box
-  running everything that seemed like a good idea at 1 a.m.
-- **Pragmatism over purity.** The NAS runs Ubuntu LTS because storage
-  should be boring, and migrations should happen for reasons. It's on the
-  list; it's not urgent.
+- **Declarative where it counts.** Every NixOS host is rebuildable from its
+  configuration rather than from memory, and rolled back just as cheaply,
+  since generations are free. The one undocumented machine in the lab is the
+  one that isn't NixOS yet.
+- **A real deploy story.** One repo, shared modules written with the module
+  system (`mkOption`/`mkIf`/`mkEnableOption` rather than copy-paste),
+  sops-managed secrets, and a staging host (`hacktop`) that builds and
+  verifies a config, and now runs the CI that gates it, before anything is
+  promoted to production. That staging-then-promote loop is the
+  change-management process.
+- **A mixed estate on purpose.** The NAS stays Ubuntu, the one box I keep
+  off Nix on purpose, because "I ported service X from Ansible to a NixOS
+  module and here's what each got right" is a better story than "I use Nix
+  for everything."
 
-The lab is also the dogfood pen for [NixRMM](/projects/nixrmm/): the
-NixOS VMs across the Proxmox hosts are exactly the kind of fleet its
-Phase 1 targets — and the game server is where
-[Gesture](/projects/gesture/)'s dedicated builds will prove themselves.
+The whole estate is where I practice the SecDevOps habits I'm building in
+the open. Running notes are in the [thought garden](/garden/), and the
+evidence is on the [ops page](/ops/).

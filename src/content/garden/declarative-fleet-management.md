@@ -1,53 +1,30 @@
 ---
-title: 'RMM is a remote shell with a dashboard (and it shouldn’t be)'
-description: 'Why remote management tooling keeps becoming the breach, and what a declarative, least-privilege alternative looks like on NixOS.'
-stage: 'budding'
+title: 'Does declarative config actually replace an RMM?'
+description: 'RMMs are necessary for managing a fleet, and I am not convinced the declarative-everything story really replaces one. Where Colmena ends and an RMM begins.'
+stage: 'seedling'
 planted: 2026-04-12
-tended: 2026-06-10
-topics: ['nixos', 'security', 'nixrmm']
+tended: 2026-06-29
+topics: ['nixos', 'homelab']
 ---
 
-Strip the marketing off most RMM products and you find the same primitive:
-a root agent that accepts arbitrary commands from a cloud control plane.
-That's not a management tool, that's a botnet with an invoice. The supply
-chain only has to fail once — and the industry keeps demonstrating that it
-does.
+An RMM is necessary software. If you're managing a fleet of machines there
+isn't really an alternative to a good one, and I'd rather not pretend the
+declarative-everything story changes that.
 
-## The inversion
+For my own [homelab](/projects/homelab/) fleet, Colmena does the job. Every
+host is a closure I deploy and roll back from one place, so I don't reach for
+an RMM at all. But Colmena isn't an RMM, and it's worth being honest about why.
+It manages machines I own, built to be uniform, that I understand top to
+bottom. It says nothing about a fleet of normal users' machines that each do
+one specific job and still need monitoring, remote hands, and support.
 
-The fix isn't a better-guarded shell; it's removing the shell. On NixOS the
-desired state of a machine is already a single, hashable artifact — the
-system closure. So fleet management can be restated:
+That gap is the idea NixRMM was circling: an enterprise-style
+configuration-management tool for ultra-scoped machines, boxes that only do one
+job, run by normal users. After living with Colmena I'm honestly not sure
+what's left for it to be, or whether a declarative model buys enough over a
+real RMM at that scale to be worth building.
 
-- **Management = rebuilding to a known-good target.** Patching and
-  reconfiguration become the same operation: apply a version-pinned
-  closure, atomically, with rollback included by construction — a health
-  check the new generation must pass, or the host reverts on its own.
-- **Monitoring = comparing against the declared state.** Drift detection
-  stops being a heuristic scan and becomes an equality check between what
-  the host runs and what the catalog says it should.
-- **The agent = a snapshot endpoint, not a root shell.** State flows out;
-  new systems arrive as whole closures. The agent's compromise is
-  annoying, not catastrophic.
-- **Human hands = a brokered session, not an agent backdoor.** When an
-  operator genuinely needs a shell or a desktop, that's an in-browser
-  SSH/RDP session through a central broker — attributable, audited, and
-  cleanly separated from the management plane the agent lives on.
-
-## What you give up
-
-Honesty requires the costs: ad-hoc "just run this on every box" is gone on
-purpose — fleet-wide change means publishing a new setup, not a script.
-There's no alerting, no log retention, no CVE scanning in the first cut,
-and none of this extends to the Windows fleet your MSP actually bills
-for. Scoped means *scoped*. I think the trade is right anyway — that's
-the bet [NixRMM](/projects/nixrmm/) is making.
-
-## Open questions
-
-- How much imperative escape hatch can you allow before you've rebuilt the
-  remote shell with extra steps? Brokered sessions answer *attribution*,
-  but not the deeper question of how much should ever be done by hand.
-- Latest-snapshot-only monitoring is refreshingly cheap — but where's the
-  line where "no history" stops being discipline and starts hiding
-  patterns an operator needed to see?
+So the open question, genuinely unresolved: is there a version of declarative
+fleet management that competes with a good RMM for normal-user machines, or
+does the declarative approach only win when you already own and understand
+every box?

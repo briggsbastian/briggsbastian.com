@@ -1,87 +1,77 @@
 ---
 title: 'Gesture'
-summary: 'A souls-like PvP game where every swing is a commitment. Server-authoritative combat, lag-compensated hitboxes, and duels that feel fair at 80ms.'
+summary: 'A deterministic 1v1 arena dueling prototype inspired by Dark Souls 3 combat. Godot 4, GDScript, fully data-driven, with the simulation built to go peer-to-peer later.'
 status: 'in-development'
 year: '2026'
-stack: ['Unreal Engine 5', 'C++', 'GAS', 'Dedicated Servers']
+stack: ['Godot 4', 'GDScript', 'Data-driven', 'Steam P2P (planned)']
 featured: true
 order: 1
 ---
 
-<!-- TODO(briggs): engine/stack is a plausible guess — replace with the real
-     details, and swap in real numbers wherever a figure appears below. -->
+**Gesture** is a skill-based 1v1 arena duel inspired by Dark Souls 3 combat.
+There's no RPG layer, no loot, and no leveling. Two players pick a build,
+fight a best-of-3, and the arena resets instantly between rounds. The only
+progression is the build you choose before the match starts.
 
-**Gesture** is a PvP-first souls-like: no bosses to grind, no world to save —
-just you, an opponent, and a combat system that punishes panic and rewards
-reads. The name is the thesis: in invasion-era dueling, the bow before the
-fight mattered as much as the fight. This is a game about what you
-communicate with your body before either blade moves.
+## What's there now
 
-## Design pillars
+Milestone 1 is playable end to end: main menu, pre-match build selection, the
+duel, and a results screen, with pause and settings. There's a Duel mode (two
+players, keyboard and mouse against a gamepad) and a single-player Sandbox
+against a training dummy, across three maps: an open Courtyard, a narrow Bridge
+with no room to circle, and a foggy Jungle with cover.
 
-- **Commitment is the whole game.** Attacks can't be cancelled into safety.
-  Every input is a bet, and the wager is stamina, position, and health.
-- **The netcode is a mechanic.** A souls-like lives or dies on whether a
-  trade *felt* legitimate. Combat is fully server-authoritative with
-  lag-compensated hitboxes, so the player who read the duel correctly wins —
-  not the player with the better route to the data center.
-- **Legibility over spectacle.** Animations telegraph honestly. If you got
-  hit, you should be able to say exactly why within half a second.
+## Combat
 
-## The combat model
+The combat is built around commitment and stamina, the way DS3's is.
 
-Three resources, no abstractions hidden from the player:
+- Every action costs stamina, and it only regenerates after a short pause. An
+  attack just needs stamina above zero to start.
+- Attacks are committed: startup, then active frames where the hitbox is live,
+  then recovery. The timing lives in 60 Hz simulation ticks defined in data,
+  not in the animation files.
+- Rolling is the main defense. The roll tier (light, medium, heavy) comes from
+  total equipment load, weapon weight plus armor class, and each tier trades
+  i-frames and distance against recovery time.
+- Poise decides who gets staggered. Poise damage accumulates, and exceeding
+  your poise interrupts whatever you're doing. Heavy attacks carry hyper armor
+  through it.
+- Backstabs, parries (buckler, parry dagger, or a risky bare-handed one),
+  ripostes, and lock-on are all in.
 
-- **Stamina** prices every action — swing, roll, block, sprint. Running dry
-  mid-exchange is the most common way to die, by design.
-- **Poise** decides who interrupts whom when both attacks land inside the
-  same window. Heavier weapons trade speed for the right to trade.
-- **Position** is the resource people forget is a resource. Whiff
-  punishment and spacing — the boring fundamentals — are where the skill
-  ceiling actually lives.
+Builds are chosen before the match: a stat pool across Vigor, Endurance,
+Strength, Dexterity, Intelligence, and Luck, plus a weapon class, an armor
+class, and two throwables. Six weapon classes so far, each with its own moveset
+and feel: Dagger, Straight Sword, Katana, Spear, Halberd, and Greatsword.
 
-Weapons are movesets, not stat sticks: a duelist should recognize an
-opponent's options from the silhouette alone. The roster starts small
-(five archetypes) and stays small until each one is honest.
+Two systems give a build its character. Imbues cycle through Fire, Lightning,
+Dark, Ice, and Poison, and each element scales off a different stat (Fire on
+Strength, Lightning on Dexterity, Dark on Intelligence, Ice on Endurance,
+Poison on Luck) and adds its own rider, so every build leans toward a natural
+element. Consumables sit on a DS-style d-pad cross: an estus flask to heal,
+plus throwables like a firebomb, a smoke bomb that breaks lock-on, a dull bomb
+that blocks healing, and a poison ball.
 
-## The netcode model
+Hits read clearly: a brief freeze on contact, camera shake on the fighter who
+got hit, and a ghost of recent damage trailing on the health bars.
 
-Server-authoritative simulation with lag-compensated hit validation —
-closer to a competitive shooter than to a fighting game, and on purpose:
+## How it's built
 
-- **Commitment hides latency.** Long windups mean the server usually holds
-  the full swing before the hit window opens. The genre's defining
-  mechanic is also free latency masking.
-- **The server owns the truth.** Clients predict their own movement and
-  nothing else. Hits, trades, poise breaks, and backstabs resolve
-  server-side against rewound hitboxes.
-- **The edges are the hard part.** Backstab validation (no teleporting
-  grabs), trade resolution inside the compensation window, and how much to
-  trust the defender's view of a roll's i-frames. Each one gets settled by
-  playtest data, not by argument.
+The half I enjoy most is the architecture. Everything is data-driven: every
+weapon, attack, armor class, roll, item, and imbue is a Godot Resource, so
+tuning the game means editing data rather than code. The code stays strict: no
+god objects, composition over inheritance, one small class per file, and every
+system testable on its own. A headless smoke test runs a scripted duel with no
+window open.
 
-Running notes on all of this grow in the
-[thought garden](/garden/netcode-for-honest-combat/).
-
-## The platform under it
-
-The unglamorous half of a PvP game is fleet management, and it's the half I
-enjoy most:
-
-- Dedicated server builds are containerized in CI alongside the client
-  build — same commit, same pipeline, no version skew between lobby and
-  binary.
-- A small allocator spins regional instances up when matchmaking demands
-  and tears them down when lobbies drain. Idle fleets are a bill, not a
-  flex.
-- Server fleets emit health metrics from day one, so a bad netcode deploy
-  shows up as a graph before it shows up as a forum thread.
-
-Building the game and building the platform it runs on are the same
-project — which is exactly why it's on this site.
+The simulation runs at a fixed 60 Hz with input separated from the simulation
+logic. That separation is the point: the plan is Steam P2P multiplayer later,
+and a deterministic sim with clean input handling is what makes that feasible.
+Networking comes last, after the combat actually feels right. Notes on that
+question grow in the [thought garden](/garden/netcode-for-honest-combat/).
 
 ## Status
 
-Deep in development. Core combat loop is playable in private builds;
-netcode model is the current battleground. Devlog entries land in the
-[thought garden](/garden/) as they're worth writing down.
+A playable Milestone 1: real combat, six weapons, builds, imbues, consumables,
+three maps, and the full match flow. Networking is the next large piece. Combat
+feel is the metric I hold everything else to.

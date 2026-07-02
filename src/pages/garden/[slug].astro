@@ -32,7 +32,7 @@ const related = others
   .slice(0, 2);
 ---
 
-<Base title={`${title} — Thought Garden`} description={description} accent="moss">
+<Base title={`${title} – Thought Garden`} description={description} accent="moss">
   <article class="container">
     <header>
       <p class="kicker"><a href="/garden/">Garden</a> / {stageGlyph[stage]} {stage}</p>
@@ -49,9 +49,9 @@ const related = others
       <Content />
     </div>
     <p class="caveat">
-      {stage === 'seedling' && 'A seedling — barely more than a planted thought. Expect it to change shape.'}
-      {stage === 'budding' && 'A budding note — taking form, still being tended.'}
-      {stage === 'evergreen' && 'An evergreen — as settled as anything in a garden gets.'}
+      {stage === 'seedling' && 'A seedling, barely more than a planted thought. Expect it to change shape.'}
+      {stage === 'budding' && 'A budding note, taking form, still being tended.'}
+      {stage === 'evergreen' && 'An evergreen, as settled as anything in a garden gets.'}
     </p>
 
     {related.length > 0 && (

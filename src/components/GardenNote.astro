@@ -11,7 +11,7 @@ const { title, description, stage, planted, tended, topics } = note.data;
 const fmt = (d: Date) =>
   d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
 
-// stage icons: seedling = sprout, budding = stem with bud, evergreen = pine
+// stage icons: seedling sprout, budding bud, evergreen pine
 const stageIcon = {
   seedling: 'M9 16v-5 M9 11c0-3-2.5-4-4.5-4 0 3 2 4 4.5 4z M9 11c0-2 1.8-3.5 4-3.5 0 2.6-1.8 3.5-4 3.5z',
   budding: 'M9 16v-6 M9 10c0-2.5-2-3.5-4-3.5 0 2.7 1.8 3.5 4 3.5z M9 7.5a2.1 2.1 0 1 0 .01 0z',
@@ -46,14 +46,13 @@ const stageIcon = {
     padding: 1.6rem;
   }
 
-  /* stages read at a glance: seedlings are sketches, evergreens glow */
   .note.seedling {
     border-style: dashed;
   }
 
   .note.evergreen {
     border-color: color-mix(in srgb, var(--accent) 35%, var(--line));
-    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--accent) 18%, transparent);
+    box-shadow: var(--panel-shadow), inset 0 1px 0 color-mix(in srgb, var(--accent) 18%, transparent);
   }
 
   header {

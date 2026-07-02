@@ -8,7 +8,7 @@ import '../styles/global.css';
 interface Props {
   title: string;
   description: string;
-  /** Section color: ember = home, iris = projects, moss = garden, frost = resume, brass = ops */
+  /** accent per section: ember home, iris projects, moss garden, frost resume, brass ops */
   accent?: 'ember' | 'iris' | 'moss' | 'frost' | 'brass';
 }
 
@@ -74,13 +74,12 @@ const isActive = (prefix: string) => path.startsWith(prefix);
         </ul>
       </div>
       <div class="container colophon">
-        <span>© {new Date().getFullYear()} Briggs Bastian — Seattle, WA</span>
+        <span>© {new Date().getFullYear()} Briggs Bastian, Seattle, WA</span>
         <span>Built with Astro · Deployed from a Nix flake</span>
       </div>
     </footer>
 
     <script>
-      // Spotlight: cards with [data-spot] get a cursor-following glow.
       document.addEventListener('pointermove', (e) => {
         const card = (e.target as Element | null)?.closest?.('[data-spot]') as HTMLElement | null;
         if (!card) return;
@@ -89,7 +88,6 @@ const isActive = (prefix: string) => path.startsWith(prefix);
         card.style.setProperty('--my', `${e.clientY - rect.top}px`);
       });
 
-      // Click-to-copy for the footer email.
       document.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((btn) => {
         btn.addEventListener('click', async () => {
           try {
@@ -108,8 +106,7 @@ const isActive = (prefix: string) => path.startsWith(prefix);
     </script>
 
     <script>
-      // Scroll reveal: html.js gates the hidden state (see global.css),
-      // so everything stays visible without JavaScript.
+      // html.js gates hidden state so no-js stays visible
       document.documentElement.classList.add('js');
       const targets = document.querySelectorAll('.hero, .intro, .section, .block');
       if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -133,8 +130,6 @@ const isActive = (prefix: string) => path.startsWith(prefix);
 </html>
 
 <style>
-  /* Night sky: aurora glow + two layers of box-shadow "stars" in
-     the page's upper region. The second star layer twinkles. */
   .sky {
     position: absolute;
     inset: 0 0 auto 0;
@@ -145,8 +140,7 @@ const isActive = (prefix: string) => path.startsWith(prefix);
     mask-image: linear-gradient(180deg, #000 0%, #000 50%, transparent 100%);
   }
 
-  /* Aurora: two blurred ribbons — the section accent plus a violet
-     counterpoint — drifting on a slow cycle. */
+  /* static: motion here flickers through glass blur */
   .aurora {
     position: absolute;
     inset: -25% -12% auto;
@@ -163,22 +157,6 @@ const isActive = (prefix: string) => path.startsWith(prefix);
         transparent 70%
       );
     filter: blur(52px);
-    animation: drift 48s ease-in-out infinite alternate;
-  }
-
-  @keyframes drift {
-    from {
-      transform: translate3d(-1.5%, -1%, 0) scale(1);
-    }
-    to {
-      transform: translate3d(1.5%, 2%, 0) scale(1.04);
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .aurora {
-      animation: none;
-    }
   }
 
   .sky::before,
@@ -217,27 +195,24 @@ const isActive = (prefix: string) => path.startsWith(prefix);
       90vw 118px rgba(232, 238, 252, 0.75), 18vw 48px 1px rgba(245, 168, 60, 0.5),
       70vw 432px rgba(157, 140, 255, 0.55), 33vw 472px rgba(232, 238, 252, 0.5),
       57vw 24px rgba(232, 238, 252, 0.65), 96vw 408px rgba(232, 238, 252, 0.45);
-    animation: twinkle 9s ease-in-out infinite alternate;
-  }
-
-  @keyframes twinkle {
-    from { opacity: 0.7; }
-    to { opacity: 1; }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .sky::after {
-      animation: none;
-    }
   }
 
   header {
     position: sticky;
     top: 0;
     z-index: 50;
-    background: color-mix(in srgb, var(--bg) 78%, transparent);
-    backdrop-filter: blur(14px);
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--bg) 72%, transparent),
+      color-mix(in srgb, var(--bg) 58%, transparent)
+    );
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
     border-bottom: 1px solid var(--line);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.04),
+      0 12px 32px rgba(4, 7, 14, 0.3);
   }
 
   nav {
@@ -307,7 +282,6 @@ const isActive = (prefix: string) => path.startsWith(prefix);
     text-decoration: none;
   }
 
-  /* Section-colored indicator dots */
   .links a[class*='dot-']::before {
     content: '';
     width: 6px;
@@ -355,8 +329,20 @@ const isActive = (prefix: string) => path.startsWith(prefix);
   footer {
     border-top: 1px solid var(--line);
     margin-top: clamp(4rem, 9vw, 7rem);
-    background: var(--bg-raised);
+    background: var(--glass);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
     overflow: hidden;
+  }
+
+  @media (prefers-reduced-transparency: reduce) {
+    header,
+    footer {
+      background: #0d1322;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
   }
 
   .footer-inner {
@@ -369,7 +355,6 @@ const isActive = (prefix: string) => path.startsWith(prefix);
     padding-block: clamp(3rem, 6vw, 5rem);
   }
 
-  /* Outlined wordmark watermark behind the footer CTA */
   .footer-inner::before {
     content: 'BB';
     position: absolute;

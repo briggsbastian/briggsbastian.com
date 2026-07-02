@@ -1,7 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
-import Orbits from '../components/Orbits.astro';
+import FleetTicker from '../components/FleetTicker.astro';
 import ProjectCard from '../components/ProjectCard.astro';
 import GardenNote from '../components/GardenNote.astro';
 
@@ -14,72 +14,74 @@ const notes = (await getCollection('garden'))
   .sort((a, b) => b.data.tended.valueOf() - a.data.tended.valueOf())
   .slice(0, 3);
 
-// TODO(briggs): fluff — tune this list to the tools you actually want to claim.
 const capabilities = [
   {
     name: 'Infrastructure as Code',
-    detail: 'NixOS modules and flakes, Terraform. Whole fleets defined in a repo, rebuilt from scratch without fear.',
+    detail: 'Six NixOS hosts, five in the house, one on Linode, described in one Nix flake and deployed with a single colmena apply. Any host can be rebuilt from scratch.',
   },
   {
     name: 'CI/CD & Release Engineering',
-    detail: 'GitHub Actions pipelines that build, test, scan, and ship — including the site you are reading.',
+    detail: 'A self-hosted Forgejo pipeline that builds every host, scans for secrets, and only mirrors to the public repo on green, including the site you are reading.',
   },
   {
-    name: 'Containers & Orchestration',
-    detail: 'OCI images built reproducibly, deployed to Kubernetes or kept honest on plain systemd.',
+    name: 'Cloud',
+    detail: 'A hybrid estate today: the off-site leg is a Terraform-provisioned Linode in the same control plane as the house. Next is Azure at architect depth, AZ-104 under study now, AZ-305 behind it.',
+  },
+  {
+    name: 'Secrets & Trust',
+    detail: 'sops-nix secrets keyed to each host’s own SSH identity, a private step-ca CA issuing real certs to internal services, and a deploy user that can ship a closure but never open a root shell.',
   },
   {
     name: 'Observability',
-    detail: 'SIEM pipelines at work, lean fleet snapshots at home. If it pages at 3 a.m., it should explain itself.',
+    detail: 'A SIEM I tune at work; at home, a declarative Loki/Alloy stack that replaced Wazuh, every host shipping its journal, alert rules living in the same flake as the hosts they watch.',
   },
   {
     name: 'Security Engineering',
-    detail: 'Threat modeling, hardening baselines, and least-privilege design — security as architecture, not audit.',
+    detail: 'Threat modeling, hardening baselines, and least-privilege design, plus a libvirt range to attack the lab and prove the detections fire.',
   },
   {
-    name: 'Automation & Tooling',
-    detail: 'Go, Python, and shell where appropriate. Internal tools with the polish of products.',
+    name: 'Networking',
+    detail: 'An overall network guy: UniFi with VLAN segmentation across trusted, IoT, and guest, plus nftables host firewalls. At work, the same on Cisco, Meraki, SonicWall, Fortinet, and pfSense.',
+  },
+  {
+    name: 'Declarative Recovery',
+    detail: 'Every NixOS host is a generation you can roll back to, and a compromised box is rebuilt to known-good with one command.',
   },
 ];
 ---
 
 <Base
-  title="Briggs Bastian — Security & Systems Engineer"
-  description="Security-minded systems engineer in Seattle. Building resilient infrastructure, a NixOS-native RMM, and a souls-like PvP game."
+  title="Briggs Bastian, Security & Systems Engineer"
+  description="Self-driven engineer in Seattle who runs a security program by day, a NixOS homelab like it's production by night, and builds a souls-like game after hours."
 >
   <section class="hero container">
-    <div class="hero-grid">
-      <div>
-        <p class="kicker">Briggs Bastian — Seattle, WA</p>
-        <h1>Systems that hold<br />under <em>pressure</em>.</h1>
-        <p class="lede">
-          Security-minded systems engineer with a deep Linux background. I design
-          infrastructure that survives bad days, automate the boring parts out of
-          existence, and — after hours — build a souls-like where the netcode has
-          to be as honest as the combat.
-        </p>
-        <div class="hero-actions">
-          <a class="btn" href="/projects/">See the work</a>
-          <a class="btn ghost" href="/garden/">Wander the garden</a>
-        </div>
-        {/* TODO(briggs): fluff numbers — replace with figures you can defend. */}
-        <dl class="stats">
-          <div>
-            <dt>years in security ops</dt>
-            <dd data-count>04+</dd>
-          </div>
-          <div>
-            <dt>projects in flight</dt>
-            <dd data-count>05</dd>
-          </div>
-          <div>
-            <dt>availability target</dt>
-            <dd data-count>99.9<span>%</span></dd>
-          </div>
-        </dl>
-      </div>
-      <Orbits />
+    <p class="kicker">Briggs Bastian, Seattle, WA</p>
+    <h1>Systems that hold<br />under <em>pressure</em>.</h1>
+    <p class="lede">
+      I'm a self-driven security analyst and engineer, happiest learning
+      across the computer space, networking, infrastructure, wherever I'm
+      needed. At work I run a security program. At home I run a NixOS homelab
+      like it's production and build a souls-like game after hours.
+    </p>
+    <div class="hero-actions">
+      <a class="btn" href="/projects/">See the work</a>
+      <a class="btn ghost" href="/garden/">Wander the garden</a>
     </div>
+    <dl class="stats">
+      <div>
+        <dt>years in security</dt>
+        <dd data-count>04+</dd>
+      </div>
+      <div>
+        <dt>hosts, one flake</dt>
+        <dd data-count>06</dd>
+      </div>
+      <div>
+        <dt>cloud regions live</dt>
+        <dd data-count>01</dd>
+      </div>
+    </dl>
+    <FleetTicker />
   </section>
 
   <section class="section container">
@@ -132,23 +134,11 @@ const capabilities = [
 
 <style>
   .hero {
-    padding-block: clamp(3.5rem, 9vw, 7rem);
-  }
-
-  .hero-grid {
-    display: grid;
-    align-items: center;
-    gap: 3rem;
-  }
-
-  @media (min-width: 64rem) {
-    .hero-grid {
-      grid-template-columns: 1.25fr 0.75fr;
-    }
+    padding-block: clamp(3.5rem, 9vw, 6.5rem) clamp(2.5rem, 6vw, 4rem);
   }
 
   .hero h1 {
-    font-size: clamp(3.25rem, 9vw, 7rem);
+    font-size: clamp(3.5rem, 10.5vw, 8.5rem);
     margin-block: 1.25rem 1.75rem;
   }
 
@@ -159,7 +149,8 @@ const capabilities = [
   }
 
   .hero .lede {
-    font-size: 1.15rem;
+    font-size: 1.3rem;
+    max-width: 44rem;
   }
 
   .hero-actions {
@@ -179,7 +170,7 @@ const capabilities = [
 
   .stats div {
     display: flex;
-    /* dt precedes dd semantically; the number renders on top */
+    /* column-reverse: number renders above label */
     flex-direction: column-reverse;
     border-left: 1px solid var(--line-bright);
     padding-left: 1.1rem;
@@ -187,7 +178,7 @@ const capabilities = [
 
   .stats dd {
     font-family: var(--serif);
-    font-size: clamp(1.9rem, 4vw, 2.6rem);
+    font-size: clamp(2.2rem, 5vw, 3.4rem);
     line-height: 1;
     color: var(--accent);
     margin-bottom: 0.4rem;
@@ -230,7 +221,6 @@ const capabilities = [
 </style>
 
 <script>
-  // Hero stats count up on load (skipped under reduced motion).
   if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
     for (const dd of document.querySelectorAll<HTMLElement>('[data-count]')) {
       const textNode = dd.firstChild;
