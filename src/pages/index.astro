@@ -17,7 +17,7 @@ const notes = (await getCollection('garden'))
 const capabilities = [
   {
     name: 'Infrastructure as Code',
-    detail: 'Five NixOS hosts described in one Nix flake and deployed with a single colmena apply. Any host can be rebuilt from scratch.',
+    detail: 'Six NixOS hosts, five in the house and one on Linode, described in one Nix flake and deployed with a single colmena apply. Any host can be rebuilt from scratch.',
   },
   {
     name: 'CI/CD & Release Engineering',
@@ -25,7 +25,7 @@ const capabilities = [
   },
   {
     name: 'Cloud',
-    detail: 'The cloud leg is code: Terraform and nixos-anywhere stood up a Linode node in the same flake as the house, and tore it down just as cleanly — it is one apply from returning. Next is Azure at architect depth, AZ-104 under study now, AZ-305 behind it.',
+    detail: 'The cloud leg is code, with the history to prove it: Terraform and nixos-anywhere stood up the Linode node, tore it down when idle, and rebuilt it the day a game server needed a public front door. Next is Azure at architect depth, AZ-104 under study now, AZ-305 behind it.',
   },
   {
     name: 'Secrets & Trust',
@@ -74,7 +74,7 @@ const capabilities = [
       </div>
       <div>
         <dt>hosts, one flake</dt>
-        <dd data-count>05</dd>
+        <dd data-count>06</dd>
       </div>
       <div>
         <dt>services on real certs</dt>

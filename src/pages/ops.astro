@@ -7,15 +7,15 @@ const hosts = [
   { name: 'mgmt', role: 'Internal DNS, a private step-ca CA, Forgejo, the Harmonia binary cache, and the SIEM', zone: 'lan' },
   { name: 'media', role: 'The media stack, declaratively; storage mounted from the NAS over NFS', zone: 'lan' },
   { name: 'playground', role: 'libvirt security lab: Kali + Parrot, reached in-browser through Guacamole', zone: 'lan' },
-  { name: 'hacktop', role: 'Staging host, and the self-hosted Forgejo Actions runner that gates the fleet', zone: 'lan' },
-  { name: 'cloud1', role: 'Linode leg, Terraform-provisioned, nixos-anywhere-installed — currently torn down; one apply from returning', zone: 'cloud' },
+  { name: 'hacktop', role: 'Staging host, the self-hosted Forgejo Actions runner, and the declarative ATMons Minecraft server', zone: 'lan' },
+  { name: 'cloud1', role: 'Linode node: the WireGuard rendezvous and DNAT proxy publishing the game server — torn down and rebuilt from code', zone: 'cloud' },
   { name: 'nas', role: 'Ubuntu 24.04 over NFSv4.2; the one host I left off NixOS on purpose', zone: '–' },
 ];
 
 const platform = [
   {
     name: 'One flake, one apply',
-    detail: 'Five NixOS hosts plus an Ubuntu NAS live in a single Nix flake and deploy with colmena apply from one workstation. Adding a host means a new directory and one line; the Linode leg came and went exactly that way.',
+    detail: 'Six NixOS hosts plus an Ubuntu NAS live in a single Nix flake and deploy with colmena apply from one workstation. Adding a host means a new directory and one line; the Linode leg has come, gone, and come back exactly that way.',
   },
   {
     name: 'Provision vs. configure',
@@ -32,6 +32,10 @@ const platform = [
   {
     name: 'A private CA, wired into NixOS',
     detail: 'step-ca issues real, auto-renewing certificates to internal services over its own ACME endpoint. Trusting the root is a module a host opts into.',
+  },
+  {
+    name: 'A public game, no open home ports',
+    detail: 'Players hit play.briggsbastian.com on the Linode; nftables DNATs the flow down a WireGuard tunnel that hacktop dials out and keeps alive. No inbound holes at home, the home IP never published, and internet noise lands on the cloud box — at ~10–25 ms of added latency.',
   },
   {
     name: 'A SIEM defined in the flake',
@@ -121,10 +125,10 @@ const runbooks = [
   <section class="container block">
     <div class="block-head" data-num="01"><p class="kicker">The estate</p></div>
     <p class="blurb">
-      Five NixOS hosts on a UniFi network and one Ubuntu NAS left off NixOS on
-      purpose, all described in a single flake and deployed with one
-      <code>colmena apply</code>. The off-site Linode leg is currently torn
-      down — the config that rebuilds it is still in the repo.
+      Five NixOS hosts on a UniFi network, a sixth off-site on Linode, and one
+      Ubuntu NAS left off NixOS on purpose, all described in a single flake
+      and deployed with one <code>colmena apply</code>. The Linode leg has
+      already been torn down and rebuilt from code once — that's the point.
     </p>
     <div class="table-wrap">
       <table>

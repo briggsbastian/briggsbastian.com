@@ -28,12 +28,14 @@ const RAW: NodeDef[] = [
   { id: 'vm-remnux', label: 'remnux', c: 'iris', r: 6, parent: 'playground', blurb: 'REMnux, next in; the Linux toolkit for tearing malware samples apart.' },
   { id: 'vm-flare', label: 'flare', c: 'iris', r: 6, parent: 'playground', blurb: 'FLARE VM (Windows), next in; the malware-analysis bench, TPM 2.0 emulated via swtpm under OVMF/UEFI.' },
 
-  { id: 'hacktop', label: 'hacktop', c: 'iris', r: 8, parent: 'lan', blurb: 'NixOS staging + CI host: configs are built and verified here before they touch production, and it runs the self-hosted Forgejo Actions runner.' },
+  { id: 'hacktop', label: 'hacktop', c: 'iris', r: 8, parent: 'lan', blurb: 'NixOS staging + CI host: configs are built and verified here before they touch production, it runs the self-hosted Forgejo Actions runner — and the ATMons Minecraft server, published to the internet through cloud1.' },
   { id: 'nas', label: 'nas · ubuntu', c: 'none', r: 8, parent: 'lan', blurb: 'Ubuntu 24.04 LTS NAS: bulk storage over NFSv4.2, and the one box kept off the NixOS fleet on purpose.' },
   { id: 'tv1', label: 'tv', c: 'brass', r: 8, parent: 'iot', blurb: 'Smart TV, quarantined on the IoT network.' },
   { id: 'tv2', label: 'tv', c: 'brass', r: 8, parent: 'iot', blurb: 'The other smart TV, on the same IoT network for the same reasons.' },
   { id: 'homepod', label: 'homepod', c: 'brass', r: 8, parent: 'iot', blurb: 'Apple HomePod, on the IoT network. Internet access only, no path to the LAN.' },
   { id: 'guests', label: 'guest devices', c: 'frost', r: 8, parent: 'guest', blurb: 'Whatever friends bring over, kept on the isolated guest network.' },
+
+  { id: 'cloud1', label: 'cloud1 · linode', c: 'iris', r: 8, parent: 'internet', blurb: 'Off-site NixOS node on Linode, Terraform-provisioned, same flake: the WireGuard rendezvous and DNAT proxy that publishes play.briggsbastian.com from hacktop without opening a single home port.' },
 ];
 
 const W = 960;

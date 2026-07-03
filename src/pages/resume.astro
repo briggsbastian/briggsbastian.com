@@ -23,14 +23,15 @@ const experience = [
     title: 'Infrastructure & SecDevOps Engineering',
     dates: '2020 – Present',
     bullets: [
-      'Design and operate a NixOS estate: five hosts on UniFi plus an Ubuntu NAS, all described in a single Nix flake as one source of truth and deployed fleet-wide with one `colmena apply`. Adding a host takes a new directory and one line.',
-      'Keep provisioning separate from configuration: Terraform stood up an off-site Linode leg and its Cloud Firewall, nixos-anywhere + disko handled the greenfield install, and Nix owned everything inside the box. The leg is decommissioned; the code that rebuilds it is one apply away.',
+      'Design and operate a NixOS estate: six hosts (five on UniFi, one on Linode) plus an Ubuntu NAS, all described in a single Nix flake as one source of truth and deployed fleet-wide with one `colmena apply`. Adding a host takes a new directory and one line.',
+      'Keep provisioning separate from configuration: Terraform stands up the Linode node and its Cloud Firewall, nixos-anywhere + disko handle the greenfield install, and Nix owns everything inside the box. The leg has been decommissioned and rebuilt from the same code — tear-down and rebuild are each one apply.',
+      'Published a public game server with zero open home ports: the LAN host dials out to the cloud node over WireGuard, nftables DNATs the public port down the tunnel, and the home IP is never exposed. The service itself is declarative — the modpack is pinned into the Nix store.',
       'Built a gated CI/CD pipeline on a self-hosted Forgejo Actions runner: nix flake check → gitleaks secret scan → matrix build of every host against a self-hosted Harmonia binary cache → a publish-on-green job that mirrors to a public GitHub repo only after all gates pass.',
       'Designed a least-privilege deploy trust model, a scoped `deploy` user that can re-activate a build but never open a root shell, with sops-nix secrets keyed to each host’s SSH host key (no key distribution, no plaintext in the store).',
       'Stood up a private PKI with step-ca: an internal CA issuing auto-renewing mTLS certs to ~15 services over its own ACME endpoint, packaged as a reusable NixOS module any host opts into.',
       'Run a declarative observability/SIEM stack (Grafana, Loki, Grafana Alloy log shipping, Alertmanager, and ntfy), migrated off Wazuh so detections and dashboards version alongside the config.',
       'Retired the fleet’s Tactical RMM/MeshCentral stack once declarative management made it redundant; the config repo replaced the agent.',
-      'Architected the network, UniFi gateway with VLAN segmentation (trusted / IoT / guest), per-host nftables firewalls, and a planned WireGuard tunnel to the cloud node, and hardened services with systemd sandboxing and CIS-informed defaults.',
+      'Architected the network, UniFi gateway with VLAN segmentation (trusted / IoT / guest), per-host nftables firewalls, and a WireGuard tunnel to the cloud node, and hardened services with systemd sandboxing and CIS-informed defaults.',
       'Operate a purple-team loop on a libvirt/KVM lab (Kali + Parrot via in-browser Guacamole): attack the fleet, confirm the SIEM detects it, then declaratively rebuild the “compromised” host to known-good with one command. Recovery is a rebuild.',
     ],
   },
@@ -85,7 +86,7 @@ const infraSkills = [
   { category: 'Architecture & Design', items: ['Hybrid / multi-cloud', 'Reference architectures', 'HLD / LLD', 'Provision-vs-configure', 'Single source of truth', 'Well-architected tradeoffs', 'Reusable modules'] },
   { category: 'CI/CD & GitOps', items: ['Forgejo Actions', 'Matrix builds', 'Harmonia binary cache', 'gitleaks gating', 'Publish-on-green', 'Git as source of truth'] },
   { category: 'Observability & SRE', items: ['Grafana', 'Loki', 'Grafana Alloy', 'Alertmanager', 'ntfy', 'Runbooks & postmortems'] },
-  { category: 'Networking', items: ['UniFi (VLAN segmentation)', 'nftables', 'WireGuard (planned)', 'Cloud Firewalls', 'DNS', 'ACME / PKI'] },
+  { category: 'Networking', items: ['UniFi (VLAN segmentation)', 'nftables', 'WireGuard', 'Cloud Firewalls', 'DNS', 'ACME / PKI'] },
   { category: 'Virtualization & Storage', items: ['libvirt / KVM', 'Guacamole', 'disko (declarative disk)', 'NFS', 'snapshot / restore'] },
   { category: 'Backup, DR & Hosting', items: ['Datto', 'Axcient', 'Veeam', 'Shared host pool servers'] },
   { category: 'On-Prem', items: ['Firewalls', 'Access points', 'Switches', 'Data shippers'] },
@@ -132,8 +133,8 @@ const infraSkills = [
       end to end: from architecture down to the deployable config. By day I run
       a company's security program as the decision-maker (Microsoft Defender,
       SOC 2 via Vanta, DLP, MDR, vulnerability and patch management); after hours
-      I design and operate a NixOS estate (an on-prem fleet, with a cloud leg
-      that rebuilds on demand) as a single source of truth in git, with gated CI/CD, private PKI,
+      I design and operate a NixOS estate (an on-prem fleet plus a Linode
+      node) as a single source of truth in git, with gated CI/CD, private PKI,
       centralized observability, and a purple-team loop that proves the
       detections. Same instincts on both sides: everything as code, least
       privilege by default, and well-architected tradeoffs between cost,
