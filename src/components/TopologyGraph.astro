@@ -100,6 +100,7 @@ const edges = nodes
 ---
 
 <figure class="topo">
+  <div class="topo-scroll">
   <svg
     id="topo-svg"
     viewBox={`0 0 ${W} ${VIEW_H.collapsed}`}
@@ -143,8 +144,9 @@ const edges = nodes
       ))}
     </g>
   </svg>
+  </div>
   <figcaption id="topo-info">
-    Hover a node to inspect it; click <strong>playground</strong> to expand its security-lab VMs. Green ticks are online status.
+    Tap or hover a node to inspect it; select <strong>playground</strong> to expand its security-lab VMs. Green ticks are online status.
   </figcaption>
 </figure>
 
@@ -153,15 +155,30 @@ const edges = nodes
     margin: 2rem 0;
   }
 
+  /* the glass frame stays put; the map pans inside it on small screens */
+  .topo-scroll {
+    background: var(--glass);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--glass-rim), var(--panel-shadow);
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+
   #topo-svg {
     display: block;
     width: 100%;
     height: auto;
-    background: var(--glass);
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    box-shadow: var(--glass-rim), var(--panel-shadow);
     user-select: none;
+  }
+
+  @media (max-width: 44rem) {
+    #topo-svg {
+      /* keep labels legible on phones; the frame scrolls sideways instead */
+      min-width: 52rem;
+    }
   }
 
   #topo-svg .c-ember { --nc: var(--ember); }
@@ -432,5 +449,11 @@ const edges = nodes
     });
 
     relayout();
+
+    // phones: the map overflows its frame — start the pan centered on the tree
+    const wrap = svg.closest<HTMLElement>('.topo-scroll');
+    if (wrap && wrap.scrollWidth > wrap.clientWidth) {
+      wrap.scrollLeft = (wrap.scrollWidth - wrap.clientWidth) / 2;
+    }
   }
 </script>
