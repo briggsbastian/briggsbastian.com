@@ -74,15 +74,17 @@ the LAN's DNS and PKI and a bad deploy there is felt everywhere.
 ## A public game, no open home ports
 
 The job that brought `cloud1` back: **`play.briggsbastian.com`**, an *All
-the Mons* modpack server (Minecraft 1.21.1, NeoForge, 373 mods) that runs
-on `hacktop` — the box with the RAM headroom — as a fully declarative
-**nix-minecraft** service, the modpack's server files pinned into the Nix
-store like any other dependency. Publishing it never touches the home
+the Mons* modpack server (Minecraft 1.21.1, NeoForge, 373 mods) I run for
+my friends. It lives on `hacktop` — the box with the RAM headroom — as a
+fully declarative **nix-minecraft** service, the modpack's server files
+pinned into the Nix store like any other dependency. Publishing it never touches the home
 firewall: `hacktop` dials **out** to `cloud1` over WireGuard and holds the
 tunnel open with keepalives, and nftables on the Linode DNATs public
 `:25565` traffic down the tunnel. No inbound rule at home, the home IP
 never published, and every drive-by scan on the internet lands on the
-cloud box instead of the house — all for ~10–25 ms of added latency.
+cloud box instead of the house — all for ~10–25 ms of added latency. Why
+I like this shape, and where it stops scaling, is a
+[garden note](/garden/the-cloud-box-is-a-bouncer/).
 
 ## The security lab
 
