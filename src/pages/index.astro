@@ -55,27 +55,39 @@ const capabilities = [
   description="Hi — I'm Briggs. I started on a SOC floor, now I run a company's security stack, and I still go home and attack my own network to prove the alerts fire."
 >
   <section class="hero container">
-    <p class="kicker">Briggs Bastian, Seattle, WA</p>
-    <h1>Hi — I'm <em>Briggs</em>.</h1>
-    <p class="lede">
-      I started out triaging SIEM alerts on a SOC floor; now I run a
-      company's security stack, and I still go home and attack my own
-      network to prove the alerts fire. Systems that hold under pressure —
-      that's the whole job. After hours it's Gesture, a 1v1 souls-like, and
-      a modded Minecraft server for the friends.
-    </p>
-    <div class="hero-actions">
-      <a class="btn" href="/projects/">See the work</a>
-      <a class="btn ghost" href="/garden/">Wander the garden</a>
-    </div>
-    <div class="now">
-      <p class="now-head">Now · July 2026</p>
-      <ul>
-        <li>studying for AZ-104, AZ-305 behind it</li>
-        <li>running <a href="/projects/homelab/">All the Mons</a> for the friends</li>
-        <li>building <a href="/projects/gesture/">Gesture</a>, a 1v1 souls-like</li>
-        <li>tending <a href="/garden/">the garden</a> in public</li>
-      </ul>
+    <div class="hero-grid">
+      <div>
+        <p class="kicker">Briggs Bastian, Seattle, WA</p>
+        <h1>Hi — I'm<br /><em>Briggs</em>.</h1>
+        <p class="lede">
+          I started out triaging SIEM alerts on a SOC floor; now I run a
+          company's security stack, and I still go home and attack my own
+          network to prove the alerts fire. Systems that hold under pressure —
+          that's the whole job. After hours it's Gesture, a 1v1 souls-like, and
+          a modded Minecraft server for the friends.
+        </p>
+        <div class="hero-actions">
+          <a class="btn" href="/projects/">See the work</a>
+          <a class="btn ghost" href="/garden/">Wander the garden</a>
+        </div>
+        <div class="now">
+          <p class="now-head">Now · July 2026</p>
+          <ul>
+            <li>studying for AZ-104, AZ-305 behind it</li>
+            <li>running <a href="/projects/homelab/">All the Mons</a> for the friends</li>
+            <li>building <a href="/projects/gesture/">Gesture</a>, a 1v1 souls-like</li>
+            <li>tending <a href="/garden/">the garden</a> in public</li>
+          </ul>
+        </div>
+      </div>
+      <img
+        class="portrait"
+        src="/portrait.png"
+        alt="Briggs Bastian"
+        width="800"
+        height="1000"
+        loading="eager"
+      />
     </div>
     <dl class="stats">
       <div>
@@ -146,6 +158,33 @@ const capabilities = [
 <style>
   .hero {
     padding-block: clamp(3.5rem, 9vw, 6.5rem) clamp(2.5rem, 6vw, 4rem);
+  }
+
+  .hero-grid {
+    display: grid;
+    gap: 2rem;
+  }
+
+  .portrait {
+    width: clamp(7.5rem, 16vw, 14rem);
+    height: auto;
+    border-radius: var(--radius);
+    border: 1px solid var(--line-bright);
+    box-shadow: var(--glass-rim), var(--panel-shadow);
+    /* placeholder until the real photo lands; swap public/portrait.png, keep ~4:5 */
+    order: -1;
+  }
+
+  @media (min-width: 64rem) {
+    .hero-grid {
+      grid-template-columns: 1fr auto;
+      gap: 3.5rem;
+    }
+
+    .portrait {
+      order: 0;
+      margin-top: 3.2rem;
+    }
   }
 
   .hero h1 {
