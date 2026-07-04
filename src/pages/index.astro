@@ -17,59 +17,69 @@ const notes = (await getCollection('garden'))
 const capabilities = [
   {
     name: 'Infrastructure as Code',
-    detail: 'Six NixOS hosts, five in the house and one on Linode, described in one Nix flake and deployed with a single colmena apply. Any host can be rebuilt from scratch.',
+    detail: 'I describe six NixOS hosts in one flake and deploy them with one colmena apply — because I never want to rebuild a box from memory again.',
   },
   {
     name: 'CI/CD & Release Engineering',
-    detail: 'A self-hosted Forgejo pipeline that builds every host, scans for secrets, and only mirrors to the public repo on green, including the site you are reading.',
+    detail: 'I built the pipeline that gates this very page: typecheck, secret scan, Nix build. Nothing I push goes public unless every check is green.',
   },
   {
     name: 'Cloud',
-    detail: 'The cloud leg is code, with the history to prove it: Terraform and nixos-anywhere stood up the Linode node, tore it down when idle, and rebuilt it the day a game server needed a public front door. Next is Azure at architect depth, AZ-104 under study now, AZ-305 behind it.',
+    detail: 'I stood my Linode node up with Terraform, tore it down when it was idle, and rebuilt it from code the day a game server needed a public front door. Next I want Azure at architect depth — AZ-104 under study, AZ-305 behind it.',
   },
   {
     name: 'Secrets & Trust',
-    detail: 'sops-nix secrets keyed to each host’s own SSH identity, a private step-ca CA issuing real certs to internal services, and a deploy user that can ship a closure but never open a root shell.',
+    detail: 'I keyed every host’s secrets to its own SSH identity, run a private CA that issues real certs to my internal services, and gave my deploy user just enough power to ship a build — never a root shell.',
   },
   {
     name: 'Observability',
-    detail: 'A SIEM I tune at work; at home, a declarative Loki/Alloy stack that replaced Wazuh, every host shipping its journal, alert rules living in the same flake as the hosts they watch.',
+    detail: 'I tune a SIEM at work; at home I replaced Wazuh with a Loki/Alloy stack so my alert rules live in git next to the hosts they watch. An alert I can’t act on is noise.',
   },
   {
     name: 'Security Engineering',
-    detail: 'Threat modeling, hardening baselines, and least-privilege design, plus a libvirt range to attack the lab and prove the detections fire.',
+    detail: 'I attack my own network from a Kali box to prove the detections fire — and when the “compromised” host needs cleanup, my recovery is a rebuild.',
   },
   {
     name: 'Networking',
-    detail: 'An overall network guy: UniFi with VLAN segmentation across trusted, IoT, and guest, plus nftables host firewalls. At work, the same on Cisco, Meraki, SonicWall, Fortinet, and pfSense.',
+    detail: 'I’m the overall network guy: UniFi with VLAN segmentation across trusted, IoT, and guest at home, plus nftables host firewalls. At work, the same on Cisco, Meraki, SonicWall, Fortinet, and pfSense.',
   },
   {
     name: 'Declarative Recovery',
-    detail: 'Every NixOS host is a generation you can roll back to, and a compromised box is rebuilt to known-good with one command.',
+    detail: 'Every host I run is a generation I can roll back to. I have torn machines down on purpose just to watch them come back identical.',
   },
 ];
 ---
 
 <Base
   title="Briggs Bastian, Security & Systems Engineer"
-  description="Self-driven engineer in Seattle who runs a security program by day, a NixOS homelab like it's production by night, and builds a souls-like game after hours."
+  description="Hi — I'm Briggs. I started on a SOC floor, now I run a company's security stack, and I still go home and attack my own network to prove the alerts fire."
 >
   <section class="hero container">
     <p class="kicker">Briggs Bastian, Seattle, WA</p>
-    <h1>Systems that hold<br />under <em>pressure</em>.</h1>
+    <h1>Hi — I'm <em>Briggs</em>.</h1>
     <p class="lede">
-      I'm a self-driven security analyst and engineer, happiest learning
-      across the computer space, networking, infrastructure, wherever I'm
-      needed. At work I run a security program. At home I run a NixOS homelab
-      like it's production and build a souls-like game after hours.
+      I started out triaging SIEM alerts on a SOC floor; now I run a
+      company's security stack, and I still go home and attack my own
+      network to prove the alerts fire. Systems that hold under pressure —
+      that's the whole job. After hours it's Gesture, a 1v1 souls-like, and
+      a modded Minecraft server for the friends.
     </p>
     <div class="hero-actions">
       <a class="btn" href="/projects/">See the work</a>
       <a class="btn ghost" href="/garden/">Wander the garden</a>
     </div>
+    <div class="now">
+      <p class="now-head">Now · July 2026</p>
+      <ul>
+        <li>studying for AZ-104, AZ-305 behind it</li>
+        <li>running <a href="/projects/homelab/">All the Mons</a> for the friends</li>
+        <li>building <a href="/projects/gesture/">Gesture</a>, a 1v1 souls-like</li>
+        <li>tending <a href="/garden/">the garden</a> in public</li>
+      </ul>
+    </div>
     <dl class="stats">
       <div>
-        <dt>years in security</dt>
+        <dt>years of 3 a.m. alerts</dt>
         <dd data-count>04+</dd>
       </div>
       <div>
@@ -77,11 +87,12 @@ const capabilities = [
         <dd data-count>06</dd>
       </div>
       <div>
-        <dt>services on real certs</dt>
-        <dd data-count>15</dd>
+        <dt>public postmortems</dt>
+        <dd data-count>04</dd>
       </div>
     </dl>
     <FleetTicker />
+    <p class="motto">NixOS is best for all use cases……</p>
   </section>
 
   <section class="section container">
@@ -158,6 +169,63 @@ const capabilities = [
     flex-wrap: wrap;
     gap: 1rem;
     margin-top: 2.5rem;
+  }
+
+  .now {
+    margin-top: clamp(2rem, 4vw, 2.75rem);
+    font-family: var(--mono);
+  }
+
+  .now-head {
+    font-size: 0.6875rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .now-head::before {
+    content: '';
+    display: inline-block;
+    width: 1.6rem;
+    height: 1px;
+    background: var(--accent);
+    vertical-align: middle;
+    margin-right: 0.65rem;
+  }
+
+  .now ul {
+    list-style: none;
+    padding: 0;
+    margin: 0.6rem 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    font-size: 0.8125rem;
+    color: var(--muted);
+  }
+
+  .now li::before {
+    content: '▸';
+    color: var(--faint);
+    margin-right: 0.6rem;
+  }
+
+  .now a {
+    color: var(--text);
+    text-decoration-color: var(--line-bright);
+  }
+
+  .now a:hover {
+    color: var(--accent-bright);
+  }
+
+  .motto {
+    margin-top: 1.1rem;
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.03em;
+    color: var(--faint);
   }
 
   .stats {
